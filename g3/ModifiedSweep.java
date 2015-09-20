@@ -79,10 +79,10 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 						}
 					} else {
 						if (pos_index[p] == 1) {
-							int n_closest = 3;
+							int n_closest = Math.min(rats.length, 3);
 							int random_closest = (int) Math.round(n_closest * Math.random());
-							Point[] cloest_points = findClosest(pipers[id][p], rats, n_closest);
-							dst = cloest_points[random_closest];
+							Point[] closest_points = findClosest(pipers[id][p], rats, n_closest);
+							dst = closest_points[random_closest];
 							pos[p][pos_index[p]] = dst;
 						} else if (pos_index[p] == 2) {
 							dst = returnToSender(pipers, p);
@@ -119,6 +119,10 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 				magnetPos = pipers[id][i];
 				break;
 			}
+		}
+
+		if (magnetPos == null) {
+			return Movement.makePoint(door, side * 0.5, neg_y, swap);
 		}
 		double distToMagnets = distance(piper, magnetPos);
 		if(distToMagnets < distToGate){
