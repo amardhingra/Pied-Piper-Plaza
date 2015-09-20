@@ -13,4 +13,8 @@ public class Move {
 		this.dy = dy;
 		this.play = play;
 	}
+
+	public String toString() {
+		return this.dx + " " + this.dy + " " + this.play;
+	}
 }

@@ -11,7 +11,6 @@ import pppp.g3.Strategy;
 
 public class Player implements pppp.sim.Player {
 
-
 	// see details below
 	private int id = -1;
 	private int side = 0;
