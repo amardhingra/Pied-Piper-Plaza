@@ -74,7 +74,7 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 
 							// move to next state (skipping 0th)
 							if (++pos_index[p] == (pos[p].length)) {
-								pos_index[p] = 1;
+								pos_index[p] = 0;
 							}
 						}
 					} else {
@@ -86,6 +86,9 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 							pos[p][pos_index[p]] = dst;
 						} else if (pos_index[p] == 2) {
 							dst = returnToSender(pipers, p);
+							if(dst.x == door && dst.y == side * 0.5){
+								pos[p][pos_index[p]] = dst;
+							}
 							if(distance(src, dst) < 2.5){
 								pos_index[p] = 1;
 							}
@@ -111,6 +114,8 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 		Point magnetPos = null;
 		for(int i = 0; i < pipers[id].length; i++){
 			if(isMagnet(i)){
+				if(pos_index[i] == 1)
+					return Movement.makePoint(door, side * 0.5, neg_y, swap);
 				magnetPos = pipers[id][i];
 				break;
 			}
@@ -119,7 +124,7 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 		if(distToMagnets < distToGate){
 			return magnetPos;
 		} else {
-			return Movement.makePoint(door, side * 0.5 + 10, neg_y, swap);
+			return Movement.makePoint(door, side * 0.5, neg_y, swap);
 		}
 	}
 
@@ -168,16 +173,17 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 		pos[0] = Movement.makePoint(door, side * 0.5, neg_y, swap);
 		pos[1] = Movement.makePoint(door, -side * 0.5 + 10, neg_y, swap);
 		pos[2] = pos[0];
-		pos[3] = Movement.makePoint(door, side * 0.5 + 5, neg_y, swap);
+		pos[3] = Movement.makePoint(door, side * 0.5 + 7.5, neg_y, swap);
 		pos[4] = pos[3]; // figure out waiting
 		return pos;
 	}
 
 	public Point[] moveHunters() {
-		Point[] pos = new Point [3];
+		Point[] pos = new Point [4];
 		pos[0] = Movement.makePoint(door, side * 0.5, neg_y, swap);
 		pos[1] = null;
 		pos[2] = null;
+		pos[3] = Movement.makePoint(door, side * 0.5 + 7.5, neg_y, swap);
 		return pos;
 	}
 
