@@ -80,9 +80,9 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 					} else {
 						if (pos_index[p] == 1) {
 							int n_closest = 3;
-							int random_closest = Math.round(n_closest * Math.random());
+							int random_closest = (int) Math.round(n_closest * Math.random());
 							Point[] cloest_points = findClosest(pipers[id][p], rats, n_closest);
-							dst = cloest_points[n];
+							dst = cloest_points[random_closest];
 							pos[p][pos_index[p]] = dst;
 						} else if (pos_index[p] == 2) {
 							dst = returnToSender(pipers, p);
@@ -126,7 +126,7 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 	// returns array of closest points, ordered by decreasing distance
 	public Point[] findClosest(Point start, Point[] ends, int n) {
 		Point[] closestPoints = new Point[n];
-		for (int i = 0; i < n, i++) {
+		for (int i = 0; i < n; i++) {
 			closestPoints[i] = Double.MAX_VALUE;
 		}
 		for (Point e : ends) {
@@ -134,7 +134,7 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 			if (dist >= closestPoints[0]) {
 				continue;
 			}
-			for (int i = 1; i < n, i++) {
+			for (int i = 1; i < n; i++) {
 				if (dist >= closestPoints[i]) {
 					closestPoints[i-1] = e;
 					break;
