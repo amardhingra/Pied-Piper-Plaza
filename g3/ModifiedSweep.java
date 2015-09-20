@@ -95,8 +95,6 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 				}
 			}
 
-		} catch (NullPointerException e) {
-			System.out.println("null pointer exception");
 		} catch (Exception e){
 			e.printStackTrace();
 		}
@@ -134,18 +132,27 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 		for (int i = 0; i < n; i++) {
 			closestPoints[i] = ends[i];
 		}
+
+		double c_dist;
+		double largest_distance;
+		int largest;
+
 		for (int i = n; i < ends.length; i++) {
-			double e_dist = distance(start, ends[i]);
-			int largest = -1;
-			for (int j = 0; j < n; j++) {
-				double c_dist = distance(start, closestPoints[j]);
-				if (e_dist < c_dist 
-					&& (c_dist >= distance(start, closestPoints[largest])
-						|| largest == -1)) {
+
+			//First find largest of smallest
+			largest = 0;
+			largest_distance = distance(start, closestPoints[largest]);
+
+			for (int j = 1; j < n; j++) {
+				c_dist = distance(start, closestPoints[j]);
+				if (largest_distance < c_dist) {
+					largest_distance = c_dist;
 					largest = j;
 				}
 			}
-			if(largest != -1){
+
+			c_dist = distance(start, ends[i]);
+			if (c_dist < largest_distance) {
 				closestPoints[largest] = ends[i];
 			}
 		}
