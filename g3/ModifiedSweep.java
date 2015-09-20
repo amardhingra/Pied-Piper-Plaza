@@ -133,17 +133,19 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 			closestPoints[i] = ends[i];
 		}
 		for (int i = n; i < ends.length; i++) {
-			double e_dist = distance(start, e);
+			double e_dist = distance(start, ends[i]);
 			int largest = -1;
 			for (int j = 0; j < n; j++) {
 				double c_dist = distance(start, closestPoints[j]);
 				if (e_dist < c_dist 
 					&& (c_dist >= distance(start, closestPoints[largest])
-						|| largest = -1)) {
+						|| largest == -1)) {
 					largest = j;
 				}
 			}
-			closestPoints[largest] = e;
+			if(largest != -1){
+				closestPoints[largest] = ends[i];
+			}
 		}
 		return closestPoints;
 	}
@@ -157,7 +159,7 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 		pos[0] = Movement.makePoint(door, side * 0.5, neg_y, swap);
 		pos[1] = Movement.makePoint(door, -side * 0.5 + 10, neg_y, swap);
 		pos[2] = pos[0];
-		pos[3] = Movement.makePoint(door, side * 0.5 + 2, neg_y, swap);
+		pos[3] = Movement.makePoint(door, side * 0.5 + 5, neg_y, swap);
 		pos[4] = pos[3]; // figure out waiting
 		return pos;
 	}
