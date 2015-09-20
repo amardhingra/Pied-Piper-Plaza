@@ -7,7 +7,13 @@ import java.util.*;
 
 public class Player implements pppp.sim.Player {
 
-	
+	// see details below
+	private int id = -1;
+	private int side = 0;
+	private int[] pos_index = null;
+	private Point[][] pos = null;
+	private Point[] random_pos = null;
+	private Random gen = new Random();
 
 	// create move towards specified destination
 	private static Move move(Point src, Point dst, boolean play)
@@ -31,21 +37,10 @@ public class Player implements pppp.sim.Player {
 		return swap_xy ? new Point(y, x) : new Point(x, y);
 	}
 
-	// see details below
-	private int id = -1;
-	private int side = 0;
-	private int[] pos_index = null;
-	private Point[][] pos = null;
-	private Point[] random_pos = null;
-	private Random gen = new Random();
-
 	// specify location that the player will alternate between
 	public void init(int id, int side, long turns,
 	                 Point[][] pipers, Point[] rats)
 	{
-		for(int i = 0; i < pipers.length; i++){
-			System.out.println(Arrays.toString(pipers[i]));
-		}
 		this.id = id;
 		this.side = side;
 		int n_pipers = pipers[id].length;
@@ -64,8 +59,8 @@ public class Player implements pppp.sim.Player {
 			// second position is chosen randomly in the rat moving area
 			pos[p][1] = null;
 			// fourth and fifth positions are outside the rat moving area
-			pos[p][3] = point(door * -18, side * 0.5 + 3, neg_y, swap);
-			pos[p][4] = point(door * +18, side * 0.5 + 3, neg_y, swap);
+			pos[p][3] = point(door * -6, side * 0.5 + 3, neg_y, swap);
+			pos[p][4] = point(door * +6, side * 0.5 + 3, neg_y, swap);
 			// start with first position
 			pos_index[p] = 0;
 		}
