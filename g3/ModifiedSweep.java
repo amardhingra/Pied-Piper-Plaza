@@ -86,7 +86,7 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 							pos[p][pos_index[p]] = dst;
 						} else if (pos_index[p] == 2) {
 							dst = returnToSender(pipers, p);
-							if(distance(src, dst) < 5){
+							if(distance(src, dst) < 2.5){
 								pos_index[p] = 1;
 							}
 						}
@@ -97,6 +97,8 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 
 		} catch (NullPointerException e) {
 			System.out.println("null pointer exception");
+		} catch (Exception e){
+			e.printStackTrace();
 		}
 	}
 
@@ -119,7 +121,7 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 		if(distToMagnets < distToGate){
 			return magnetPos;
 		} else {
-			return gate;
+			return Movement.makePoint(door, side * 0.5 + 10, neg_y, swap);
 		}
 	}
 
