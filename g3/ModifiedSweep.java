@@ -125,21 +125,25 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 
 	// returns array of closest points, ordered by decreasing distance
 	public Point[] findClosest(Point start, Point[] ends, int n) {
+		if (n <= ends.length) {
+			return ends;
+		}
 		Point[] closestPoints = new Point[n];
 		for (int i = 0; i < n; i++) {
-			closestPoints[i] = Double.MAX_VALUE;
+			closestPoints[i] = ends[i];
 		}
-		for (Point e : ends) {
-			double dist = distance(start, e);
-			if (dist >= closestPoints[0]) {
-				continue;
-			}
-			for (int i = 1; i < n; i++) {
-				if (dist >= closestPoints[i]) {
-					closestPoints[i-1] = e;
-					break;
+		for (int i = n; i < ends.length; i++) {
+			double e_dist = distance(start, e);
+			int largest = -1;
+			for (int j = 0; j < n; j++) {
+				double c_dist = distance(start, closestPoints[j]);
+				if (e_dist < c_dist 
+					&& (c_dist >= distance(start, closestPoints[largest])
+						|| largest = -1)) {
+					largest = j;
 				}
 			}
+			closestPoints[largest] = e;
 		}
 		return closestPoints;
 	}
