@@ -82,7 +82,7 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 							dst = findClosestRat(pipers[id][p], rats);
 							pos[p][pos_index[p]] = dst;
 						} else if (pos_index[p] == 2) {
-							dst = returnToSender()
+							dst = returnToSender(pipers, p)
 						}
 						moves[p] = Movement.makeMove(src, dst, pos_index[p] > 1);
 					}
@@ -98,16 +98,20 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 		return p >= low && p < high;
 	}
 
-	public Point[] findClosestRat(Point piper, Point[] rats, int n){
+	private Point[] returnToSender(Point[][] pipers, int p){
+
+	}
+
+	public Point[] findClosest(Point start, Point[] ends, int n){
 		
 		Point[] closestPoints = new Point[n];
 		// Maybe find the closest rat to the magnet
 		double closestDist = Double.MAX_VALUE;
 		Point closestPoint = null;
-		for(Point r : rats){
-			double dist = distance(piper, r);
+		for(Point e : ends){
+			double dist = distance(start, re;
 			if(dist < closestDist){
-				closestPoint = r;
+				closestPoint = e;
 				closestDist = dist;
 			}
 		}
