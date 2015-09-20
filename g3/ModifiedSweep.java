@@ -99,6 +99,8 @@ public class ModifiedSweep implements pppp.g3.Strategy {
                             }
                             play = true;
                         } else{
+                            dst = findClosest(pipers[id][p], rats, 1)[0];
+                            piperStateMachine[p][1] = dst;
                             play = false;
                         }
                     } else if (state == 2) {
@@ -108,7 +110,6 @@ public class ModifiedSweep implements pppp.g3.Strategy {
                         }
                         play = true;
                     } else if (state == 3) {
-
                         if(isWithinDistance(src, insideGate, 0.00001)){
                             piperState[p] = 0;
                             dst = gateEntrance;
@@ -120,6 +121,14 @@ public class ModifiedSweep implements pppp.g3.Strategy {
                             dst = findClosest(pipers[id][p], rats, 1)[0];
                             piperStateMachine[p][1] = dst;
                         } else{
+                            dst = returnToSender(pipers, p);
+                            if(dst == gateEntrance) {
+                                // if we are returning to gate set state to 2
+                                piperState[p] = 2;
+                            } else {
+                                // if we are going to magnets set state to 4
+                                piperStateMachine[p][4] = dst;
+                            }
                             play = true;
                         }
                     } else {
