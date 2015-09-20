@@ -28,4 +28,8 @@ public class Movement {
 		return new Move(dx, dy, play);
 	}
 
+	public static double distance(Point a, Point b){
+		return Math.hypot(a.x - b.x, a.y - b.y);
+	}
+
 }
