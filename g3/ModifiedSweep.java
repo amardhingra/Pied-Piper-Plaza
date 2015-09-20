@@ -79,10 +79,13 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 						}
 					} else {
 						if (pos_index[p] == 1) {
-							dst = findClosestRat(pipers[id][p], rats);
+							dst = findClosest(pipers[id][p], rats, 1);
 							pos[p][pos_index[p]] = dst;
 						} else if (pos_index[p] == 2) {
-							dst = returnToSender(pipers, p)
+							dst = returnToSender(pipers, p);
+							if(distance(src, dst) < 5){
+								pos_index[p] = 1;
+							}
 						}
 						moves[p] = Movement.makeMove(src, dst, pos_index[p] > 1);
 					}
@@ -98,18 +101,33 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 		return p >= low && p < high;
 	}
 
-	private Point[] returnToSender(Point[][] pipers, int p){
-
+	private Point returnToSender(Point[][] pipers, int p){
+		Point piper = pipers[id][p];
+		Point gate = Movement.makePoint(door, side * 0.5, neg_y, swap);
+		double distToGate = distance(piper, gate);
+		Point magnetPos = null;
+		for(int i = 0; i < pipers[id].length; i++){
+			if(isMagnet(i)){
+				magnetPos = pipers[id][i];
+				break;
+			}
+		}
+		double distToMagnets = distance(piper, magnetPos);
+		if(distToMagnets < distToGate){
+			return magnetPos;
+		} else {
+			return gate;
+		}
 	}
 
-	public Point[] findClosest(Point start, Point[] ends, int n){
+	public Point findClosest(Point start, Point[] ends, int n){
 		
 		Point[] closestPoints = new Point[n];
 		// Maybe find the closest rat to the magnet
 		double closestDist = Double.MAX_VALUE;
 		Point closestPoint = null;
 		for(Point e : ends){
-			double dist = distance(start, re;
+			double dist = distance(start, e);
 			if(dist < closestDist){
 				closestPoint = e;
 				closestDist = dist;
