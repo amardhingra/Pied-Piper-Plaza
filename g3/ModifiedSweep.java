@@ -68,16 +68,32 @@ public class ModifiedSweep implements pppp.g3.Strategy {
                     Point src = pipers[id][p];
                     Point dst = piperStateMachine[p][piperState[p]];
 
-					// start by checking if we have reached the destination from the last move
-					if (isWithinDistance(src, dst, 0.000001)) {
+                    int state = piperState[p];
+                    boolean play = state > 1;
 
-                        // move to next state
-                        if (++piperState[p] == (piperStateMachine[p].length)) {
-                            piperState[p] = 0;
+                    if(state == 0 || state == 1 || state == 3){
+                        // start by checking if we have reached the destination from the last move
+                        if (isWithinDistance(src, dst, 0.000001)) {
+
+                            // move to next state
+                            if (++piperState[p] == (piperStateMachine[p].length)) {
+                                piperState[p] = 0;
+                            }
+                            dst = piperStateMachine[p][piperState[p]];
                         }
+                    } else if (state == 2) {
+                        // start by checking if we have reached the destination from the last move
+                        if (isWithinDistance(src, dst, 0.000001)) {
+                            piperState[p] = 3;
+                        }
+
+                        if(noRatsAreWithinRange(src, rats, 7.5) && src.y > 0){
+                            piperState[p] = 1;
+                        }
+                        dst = piperStateMachine[p][piperState[p]];
                     }
-					// assign the move for the magnet player
-					moves[p] = makeMagnetMove(src, p);
+                    // assign the move for the magnet player
+                    moves[p] = Movement.makeMove(src, dst, play);//makeMagnetMove(src, p);
 				} else {
 
                     Point src = pipers[id][p];
@@ -96,6 +112,9 @@ public class ModifiedSweep implements pppp.g3.Strategy {
                     } else if (state == 1) {
                         if(isWithinDistance(src, dst, 0.00001)){
                             dst = returnToSender(pipers, p);
+                            if(dst == null){
+                                System.out.println("Error");
+                            }
                             if(dst == gateEntrance) {
                                 // if we are returning to gate set state to 2
                                 piperState[p] = 2;
@@ -105,9 +124,12 @@ public class ModifiedSweep implements pppp.g3.Strategy {
                                 piperStateMachine[p][4] = dst;
                             }
                             play = true;
-                        } else{
+                        } else {
                             // if we haven't reached the destination recompute the closest rat
                             dst = findNearestRatForHunter(src, pipers, rats, hNumber, numberOfHunters);//findClosest(pipers[id][p], rats, 1)[0];
+                            if(dst == null){
+                                System.out.println("Error2");
+                            }
                             piperStateMachine[p][1] = dst;
                             play = false;
                         }
@@ -115,16 +137,20 @@ public class ModifiedSweep implements pppp.g3.Strategy {
                         if(isWithinDistance(src, gateEntrance, 0.00001)){
                             piperState[p] = 3;
                             dst = insideGate;
+                        } else if (noRatsAreWithinRange(src, rats, 7.5)){
+                            piperState[p] = 1;
+                            dst = findNearestRatForHunter(src, pipers, rats, hNumber, numberOfHunters);//findClosest(pipers[id][p], rats, 1)[0];
+                            piperStateMachine[p][1] = dst;
                         }
                         play = true;
                     } else if (state == 3) {
-                        if(isWithinDistance(src, insideGate, 0.00001)){
+                        if(isWithinDistance(src, insideGate, 0.00001) || noRatsAreWithinRange(src, rats, 7.5)){
                             piperState[p] = 0;
                             dst = gateEntrance;
                         }
                         play = true;
                     } else if (state == 4) {
-                        if(isWithinDistance(src, dst, 2.5)){
+                        if(isWithinDistance(src, dst, 2.5) || noRatsAreWithinRange(src, rats, 7.5)){
                             // we are only trying to get within 2.5m of the magnets
                             piperState[p] = 1;
                             dst = findNearestRatForHunter(src, pipers, rats, hNumber, numberOfHunters);//findClosest(pipers[id][p], rats, 1)[0];
@@ -146,6 +172,9 @@ public class ModifiedSweep implements pppp.g3.Strategy {
                         System.out.println("Piper " + p + " is in state " + state);
                     }
                     hNumber++;
+                    if(dst == null){
+                        System.out.println("Piper " + p + " is in state " + state);
+                    }
                     moves[p] = Movement.makeMove(src, dst, play);
 					}
 				}
@@ -201,15 +230,17 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 	}
 
     public Point findNearestRatForHunter(Point hunterPos, Point[][] pipers, Point[] rats, int hunterNumber, int numberOfHunters){
-        if(numberOfHunters > rats.length){
+        if(numberOfHunters + 1 > rats.length){
             return findClosest(hunterPos, rats, 1)[0];
         }
 
         Point closestRat = null;
         double closestDistance = Double.MAX_VALUE;
+        int ind = -1;
         Point rat;
         for(int i = 0; i < rats.length; ++i){
-            if(i % hunterNumber != 0){
+            if(rats[i] == null){ continue; }
+            if(i % (hunterNumber+1) != 0){
                 continue;
             }
             rat = rats[i];
@@ -220,9 +251,11 @@ public class ModifiedSweep implements pppp.g3.Strategy {
             if(distanceToRat < closestDistance){
                 closestRat = rat;
                 closestDistance = distanceToRat;
+                ind = i;
             }
         }
         if(closestRat != null){
+            //rats[ind] = null;
             return closestRat;
         } else {
             return findClosest(hunterPos, rats, 1)[0];
@@ -245,6 +278,18 @@ public class ModifiedSweep implements pppp.g3.Strategy {
             }
         }
         return false;
+    }
+
+    private boolean noRatsAreWithinRange(Point piper, Point[] rats, double distance){
+        for(Point rat:rats){
+            if(rat == null){
+                continue;
+            }
+            if(Movement.distance(piper, rat) < distance){
+                return false;
+            }
+        }
+        return true;
     }
 
 	// returns array of closest points, ordered by decreasing distance
