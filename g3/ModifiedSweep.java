@@ -27,6 +27,7 @@ public class ModifiedSweep implements pppp.g3.Strategy {
     private int numberOfMagnets = 0;
 
     private int magnetNumber = 0;
+	private int sparseCutoff = 10;
 
 	public void init(int id, int side, long turns,
 	                 Point[][] pipers, Point[] rats){
@@ -47,12 +48,13 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 		numberOfPipers = pipers[id].length;
 		piperStateMachine = new Point [numberOfPipers][];
 		piperState = new int [numberOfPipers];
+		sparseCutoff = 100 / numberOfPipers;
 
 		setNumberOfHuntersAndMagnets();
 		int magnetNumber = 0;
 		for (int p = 0 ; p != numberOfPipers; ++p) {
 			if (isMagnet(p)) {
-				piperStateMachine[p] = createMagnetStateMachine(magnetNumber++);
+				piperStateMachine[p] = createMagnetStateMachine(magnetNumber++, rats);
 			} else {
 				piperStateMachine[p] = createHunterStateMachine();
 			}
@@ -70,13 +72,13 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 				Point dst = piperStateMachine[p][piperState[p]];
 				int state = piperState[p];
 
-				if(rats.length <= 10 && isMagnet(p, rats) && isMagnet(p)){
+				if(rats.length <= sparseCutoff && isMagnet(p, rats) && isMagnet(p)){
 					piperStateMachine[p] = createHunterStateMachine();
 					if(Movement.makePoint(pipers[id][p].x, pipers[id][p].y, neg_y, swap).y > gateEntrance.y){
 						piperState[p] = 0;
 					} else {
 						piperState[p] = 1;
-						piperStateMachine[p][1] = findNearestRatForHunter(src, pipers, rats, hNumber++, numberOfHunters);//findClosest(pipers[id][p], rats, 1)[0]
+						piperStateMachine[p][1] = findNearestRatForHunter(src, pipers, rats, hNumber++, numberOfHunters, p);//findClosest(pipers[id][p], rats, 1)[0]
 					}
 			}
 
@@ -93,6 +95,7 @@ public class ModifiedSweep implements pppp.g3.Strategy {
                                 piperState[p] = 0;
                             }
                             dst = piperStateMachine[p][piperState[p]];
+
                         }
                     } else if (state == 2) {
                         // start by checking if we have reached the destination from the last move
@@ -112,9 +115,9 @@ public class ModifiedSweep implements pppp.g3.Strategy {
                 else {
                     boolean play = false;
                     if(state == 0){
-                        if(isWithinDistance(src, gateEntrance, 0.00001)){
+                        if(isWithinDistance(src, gateEntrance, 0.00001) || isInArena(src)){
                             piperState[p] = 1;
-                            dst = findNearestRatForHunter(src, pipers, rats, hNumber, numberOfHunters);
+                            dst = findNearestRatForHunter(src, pipers, rats, hNumber, numberOfHunters, p);
                             piperStateMachine[p][1] = dst;
                         }
                         play = false;
@@ -135,7 +138,7 @@ public class ModifiedSweep implements pppp.g3.Strategy {
                             play = true;
                         } else {
                             // if we haven't reached the destination recompute the closest rat
-                            dst = findNearestRatForHunter(src, pipers, rats, hNumber, numberOfHunters);
+                            dst = findNearestRatForHunter(src, pipers, rats, hNumber, numberOfHunters, p);
                             if(dst == null){
                                 System.out.println("Error2");
                             }
@@ -148,7 +151,7 @@ public class ModifiedSweep implements pppp.g3.Strategy {
                             dst = insideGate;
                         } else if (noRatsAreWithinRange(src, rats, 7.5)){
                             piperState[p] = 1;
-                            dst = findNearestRatForHunter(src, pipers, rats, hNumber, numberOfHunters);
+                            dst = findNearestRatForHunter(src, pipers, rats, hNumber, numberOfHunters, p);
                             piperStateMachine[p][1] = dst;
                         }
                         play = true;
@@ -162,7 +165,7 @@ public class ModifiedSweep implements pppp.g3.Strategy {
                         if(isWithinDistance(src, dst, 2.5) || noRatsAreWithinRange(src, rats, 7.5)){
                             // we are only trying to get within 2.5m of the magnets
                             piperState[p] = 1;
-                            dst = findNearestRatForHunter(src, pipers, rats, hNumber, numberOfHunters);
+                            dst = findNearestRatForHunter(src, pipers, rats, hNumber, numberOfHunters, p);
                             piperStateMachine[p][1] = dst;
                         } else{
                             // if we haven't reached the destination redecide whether to go to
@@ -214,13 +217,17 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 	}
 
 	private boolean isMagnet(int p, Point[] rats){
-		if(rats.length <= 10){
+		if(rats.length <= sparseCutoff){
 			return false;
 		}
 
 		int low = numberOfPipers / 2  - numberOfPipers / 4;
 		int high = numberOfPipers / 2  + numberOfPipers / 4;
 		return p >= low && p < high;
+	}
+
+	private boolean isInArena(Point pos){
+		return (Math.abs(pos.x) < side/2 && Math.abs(pos.y) < side/2);
 	}
 
 	private Point returnToSender(Point[][] pipers, int p, Point[] rats){
@@ -248,7 +255,7 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 		}
 	}
 
-    public Point findNearestRatForHunter(Point hunterPos, Point[][] pipers, Point[] rats, int hunterNumber, int numberOfHunters){
+    public Point findNearestRatForHunter(Point hunterPos, Point[][] pipers, Point[] rats, int hunterNumber, int numberOfHunters, int piper){
 		if(numberOfHunters + 1 > rats.length){
             return findClosest(hunterPos, rats, 1)[0];
         }
@@ -263,7 +270,7 @@ public class ModifiedSweep implements pppp.g3.Strategy {
                 continue;
             }
             rat = rats[i];
-            if(isNearMagnet(rat, pipers, rats, 7.5) || isNearGate(rat, 0.0001)){
+            if(isNearMagnet(rat, pipers, rats, 2.5, piper) || isNearGate(rat, 0.0001)){
                 continue;
             }
             double distanceToRat = Movement.distance(hunterPos, rat);
@@ -286,13 +293,16 @@ public class ModifiedSweep implements pppp.g3.Strategy {
         return (Movement.distance(p, gateEntrance) < distance);
     }
 
-    public boolean isNearMagnet(Point rat, Point[][] pipers, Point[] rats, double distance){
+    public boolean isNearMagnet(Point rat, Point[][] pipers, Point[] rats, double distance, int piper){
         for(int i = 0; i < pipers[id].length; i++){
-            if(!isMagnet(i, rats)){
-                continue;
-            }
-            Point piper = pipers[id][i];
-            if(Movement.distance(rat, piper) < distance) {
+//            if(!isMagnet(i, rats)){
+//                continue;
+//            }
+			if (piper == i) {
+				continue;
+			}
+            Point p = pipers[id][i];
+            if(Movement.distance(rat, p) < distance) {
                 return true;
             }
         }
@@ -347,13 +357,70 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 		return closestPoints;
 	}
 
-	private double distanceFromPointToLine(Point x, Point lx, Point ly) {
-		
+	private double distanceFromPointToLine(Point p, Point lineStart, Point lineEnd) {
+		return Math.abs((lineEnd.y-lineStart.y)*p.x - (lineEnd.x-lineStart.x)*p.y + lineEnd.x*lineStart.y - lineEnd.y*lineStart.x) / Math.sqrt(Math.pow(lineEnd.y-lineStart.y, 2) + Math.pow(lineEnd.x-lineStart.x, 2));
 	}
 
-	private Point[] createMagnetStateMachine(int magnetNumber) {
+	private int numberOfRatsOnLine(Point lineStart, Point lineEnd, Point[] rats, double maxDist) {
+		int count = 0;
+		for (Point rat : rats) {
+			if (distanceFromPointToLine(rat, lineStart, lineEnd) <= maxDist) {
+				count++;
+			}
+		}
+		return count;
+	}
 
-		int spreadAngle = Math.min((numberOfMagnets - 1) * 10, 90);
+	private Point findBestDestination(Point[] rats) {
+		int bestCount = 0;
+		int bestAngle = -1;
+		Point bestEnd = null;
+		for (int i=-45; i < 45; i++) {
+			double x = Math.sin(Math.toRadians(i))*(-side * 0.4);
+			if (x > side/2) {
+				x = side/2;
+			} else if (x < -side/2) {
+				x = -side/2;
+			}
+			double y = Math.cos(Math.toRadians(i))*(-side * 0.4);
+			Point end = Movement.makePoint(x, y, neg_y, swap);
+			int num = numberOfRatsOnLine(gateEntrance, end, rats, 10);
+			if (num > bestCount) {
+				bestCount = num;
+				bestEnd = end;
+				bestAngle = i;
+			}
+		}
+		return bestEnd;
+	}
+
+	private int findBestAngle(Point[] rats) {
+
+		int bestCount = 0;
+		int bestAngle = -1;
+		Point bestEnd = null;
+		for (int i=-90; i < 90; i++) {
+			double x = Math.sin(Math.toRadians(i))*(-side * 0.4);
+			if (x > side/2) {
+				x = side/2;
+			} else if (x < -side/2) {
+				x = -side/2;
+			}
+			double y = Math.cos(Math.toRadians(i))*(-side * 0.4);
+			Point end = Movement.makePoint(x, y, neg_y, swap);
+			int num = numberOfRatsOnLine(gateEntrance, end, rats, 5);
+			if (num > bestCount) {
+				bestCount = num;
+				bestEnd = end;
+				bestAngle = i;
+			}
+		}
+		return bestAngle;
+	}
+
+	private Point[] createMagnetStateMachine(int magnetNumber, Point[] rats) {
+
+		int spreadAngle = Math.min((numberOfMagnets - 1) * 5, 90);
 		int increment = spreadAngle/(numberOfMagnets - 1);
 
 		spreadAngle = -spreadAngle/2;
@@ -365,8 +432,16 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 		pos[0] = gateEntrance;
 
 		// go to opposite gate
-		double angle = Math.toRadians(spreadAngle + magnetNumber * increment);
-		pos[1] = Movement.makePoint(Math.sin(angle)*(-side * 0.4), Math.cos(angle)*(-side * 0.4), neg_y, swap);
+		int offset = findBestAngle(rats);
+		double angle = Math.toRadians(spreadAngle + magnetNumber * increment + offset);
+		double x = Math.sin(angle)*(side * 0.4);
+		if (x > side/2) {
+			x = side/2;
+		} else if (x < -side/2) {
+			x = -side/2;
+		}
+		double y = Math.cos(angle)*(side * 0.4);
+		pos[1] = Movement.makePoint(x, -y, neg_y, swap);
 
 		//go back to gate entrance
 		pos[2] = pos[0];

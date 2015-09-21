@@ -29,12 +29,12 @@ public class HH implements pppp.g3.Strategy {
 			boolean neg_y = id == 2 || id == 3;
 			boolean swap  = id == 1 || id == 3;
 
-			double distance = 2*side/3;
+			double distance = side/2;
 			double theta = Math.toRadians(p * 90.0/(n_pipers-1) + 45);
 			// first and third position is at the door
 			pos[p][0] = pos[p][2] = Movement.makePoint(door, side * 0.5, neg_y, swap);
 			// second position is chosen randomly in the rat moving area
-			pos[p][1] = Movement.makePoint(distance * Math.cos(theta), distance + -1 * distance * Math.sin(theta), neg_y, swap);
+			pos[p][1] = Movement.makePoint(distance * Math.cos(theta), -1 * distance * Math.sin(theta), neg_y, swap);
 			// fourth and fifth positions are outside the rat moving area
 			pos[p][3] = Movement.makePoint(door, side * 0.5 + 10, neg_y, swap);
 			//pos[p][4] = point(door * +18, side * 0.5 + 3, neg_y, swap);
