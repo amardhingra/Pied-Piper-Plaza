@@ -74,19 +74,22 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 
 							// move to next state (skipping 0th)
 							if (++pos_index[p] == (pos[p].length)) {
-								pos_index[p] = 1;
+								pos_index[p] = 0;
 							}
 						}
 					} else {
 						if (pos_index[p] == 1) {
-							int n_closest = 3;
+							int n_closest = Math.min(rats.length, 3);
 							int random_closest = (int) Math.round(n_closest * Math.random());
-							Point[] cloest_points = findClosest(pipers[id][p], rats, n_closest);
-							dst = cloest_points[random_closest];
+							Point[] closest_points = findClosest(pipers[id][p], rats, n_closest);
+							dst = closest_points[random_closest];
 							pos[p][pos_index[p]] = dst;
 						} else if (pos_index[p] == 2) {
 							dst = returnToSender(pipers, p);
-							if(distance(src, dst) < 5){
+							if(dst.x == door && dst.y == side * 0.5){
+								pos[p][pos_index[p]] = dst;
+							}
+							if(distance(src, dst) < 2.5){
 								pos_index[p] = 1;
 							}
 						}
@@ -95,8 +98,8 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 				}
 			}
 
-		} catch (NullPointerException e) {
-			System.out.println("null pointer exception");
+		} catch (Exception e){
+			e.printStackTrace();
 		}
 	}
 
@@ -111,15 +114,21 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 		Point magnetPos = null;
 		for(int i = 0; i < pipers[id].length; i++){
 			if(isMagnet(i)){
+				if(pos_index[i] == 1)
+					return Movement.makePoint(door, side * 0.5, neg_y, swap);
 				magnetPos = pipers[id][i];
 				break;
 			}
+		}
+
+		if (magnetPos == null) {
+			return Movement.makePoint(door, side * 0.5, neg_y, swap);
 		}
 		double distToMagnets = distance(piper, magnetPos);
 		if(distToMagnets < distToGate){
 			return magnetPos;
 		} else {
-			return gate;
+			return Movement.makePoint(door, side * 0.5, neg_y, swap);
 		}
 	}
 
@@ -132,18 +141,27 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 		for (int i = 0; i < n; i++) {
 			closestPoints[i] = ends[i];
 		}
+
+		double c_dist;
+		double largest_distance;
+		int largest;
+
 		for (int i = n; i < ends.length; i++) {
-			double e_dist = distance(start, ends[i]);
-			int largest = -1;
-			for (int j = 0; j < n; j++) {
-				double c_dist = distance(start, closestPoints[j]);
-				if (e_dist < c_dist 
-					&& (c_dist >= distance(start, closestPoints[largest])
-						|| largest == -1)) {
+
+			//First find largest of smallest
+			largest = 0;
+			largest_distance = distance(start, closestPoints[largest]);
+
+			for (int j = 1; j < n; j++) {
+				c_dist = distance(start, closestPoints[j]);
+				if (largest_distance < c_dist) {
+					largest_distance = c_dist;
 					largest = j;
 				}
 			}
-			if(largest != -1){
+
+			c_dist = distance(start, ends[i]);
+			if (c_dist < largest_distance) {
 				closestPoints[largest] = ends[i];
 			}
 		}
@@ -159,16 +177,17 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 		pos[0] = Movement.makePoint(door, side * 0.5, neg_y, swap);
 		pos[1] = Movement.makePoint(door, -side * 0.5 + 10, neg_y, swap);
 		pos[2] = pos[0];
-		pos[3] = Movement.makePoint(door, side * 0.5 + 5, neg_y, swap);
+		pos[3] = Movement.makePoint(door, side * 0.5 + 7.5, neg_y, swap);
 		pos[4] = pos[3]; // figure out waiting
 		return pos;
 	}
 
 	public Point[] moveHunters() {
-		Point[] pos = new Point [3];
+		Point[] pos = new Point [4];
 		pos[0] = Movement.makePoint(door, side * 0.5, neg_y, swap);
 		pos[1] = null;
 		pos[2] = null;
+		pos[3] = Movement.makePoint(door, side * 0.5 + 7.5, neg_y, swap);
 		return pos;
 	}
 
