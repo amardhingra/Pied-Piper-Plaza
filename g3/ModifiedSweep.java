@@ -94,23 +94,25 @@ public class ModifiedSweep implements pppp.g3.Strategy {
                     }
                     // assign the move for the magnet player
                     moves[p] = Movement.makeMove(src, dst, play);//makeMagnetMove(src, p);
-				} else {
+				}
+                // hunter
+                else {
 
                     Point src = pipers[id][p];
                     Point dst = piperStateMachine[p][piperState[p]];
 
                     boolean play = false;
                     int state = piperState[p];
-                    //System.out.println("Piper " + p + " is in state " + state);
+
                     if(state == 0){
                         if(isWithinDistance(src, gateEntrance, 0.00001)){
                             piperState[p] = 1;
-                            dst = findNearestRatForHunter(src, pipers, rats, hNumber, numberOfHunters);//findClosest(pipers[id][p], rats, 1)[0];
+                            dst = findNearestRatForHunter(src, pipers, rats, hNumber, numberOfHunters);
                             piperStateMachine[p][1] = dst;
                         }
                         play = false;
                     } else if (state == 1) {
-                        if(isWithinDistance(src, dst, 0.00001)){
+                        if(isWithinDistance(src, dst, 2.5)){
                             dst = returnToSender(pipers, p);
                             if(dst == null){
                                 System.out.println("Error");
@@ -188,7 +190,7 @@ public class ModifiedSweep implements pppp.g3.Strategy {
 	}
 
     private boolean isWithinDistance(Point src, Point dst, double error){
-        if(dst != null &&
+        if(src != null && dst != null &&
                 // checking if we are within a minimum distance of the destination
                 Math.abs(src.x - dst.x) < error &&
                 Math.abs(src.y - dst.y) < error){
