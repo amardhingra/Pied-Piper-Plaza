@@ -10,81 +10,98 @@ import java.lang.System;
 
 public class OnePiperStrategy implements pppp.g3.Strategy {
 
+    //Because in this class p is always 0.
+    private static int p = 0;
+
     private int id = -1;
-	private int side = 0;
+    private int side = 0;
     private long turns = 0;
     private int numberOfPipers = 0;
-	private int[] piperState = null;
-	private Point[][] piperStateMachine = null;
-	private double door = 0.0;
-	private boolean neg_y;
-	private boolean swap;
+    private int[] piperState = null;
+    private Point[][] piperStateMachine = null;
+    private double door = 0.0;
+    private boolean neg_y;
+    private boolean swap;
 
     private Point gateEntrance = null;
     private Point insideGate = null;
+    private Point justOutsideGate = null;
 
     private int numberOfHunters = 0;
-    private int numberOfMagnets = 0;
+    private int sparseCutoff = 10;
 
-    private int magnetNumber = 0;
-	private int sparseCutoff = 10;
+    private int initNumberOfRats;
 
-	public void init(int id, int side, long turns,
-	                 Point[][] pipers, Point[] rats){
-		// storing variables
+    public void init(int id, int side, long turns,
+                     Point[][] pipers, Point[] rats){
+        // storing variables
         this.id = id;
-		this.side = side;
+        this.side = side;
         this.turns = turns;
 
         // variables to rotate map
         neg_y = id == 2 || id == 3;
-		swap  = id == 1 || id == 3;
+        swap  = id == 1 || id == 3;
 
         // create gate positions
-        gateEntrance = Movement.makePoint(door, side * 0.5, neg_y, swap);
+        gateEntrance = Movement.makePoint(door, side * 0.5 - 5, neg_y, swap);
         insideGate = Movement.makePoint(door, side * 0.5 + 7.5, neg_y, swap);
+        justOutsideGate = Movement.makePoint(door, side * 0.5 - 10, neg_y, swap);
 
         // create the state machines for the pipers
-		numberOfPipers = pipers[id].length;
-		piperStateMachine = new Point [numberOfPipers][];
-		piperState = new int [numberOfPipers];
+        numberOfPipers = pipers[id].length;
+        piperStateMachine = new Point [numberOfPipers][];
+        piperState = new int[numberOfPipers];
+        initNumberOfRats = rats.length;
 
-		for (int p = 0 ; p != numberOfPipers; ++p) {
-			if (isLeftSweep(p)) {
-				piperStateMachine[p] = createLeftSweepStateMachine();
-			} else {
-				piperStateMachine[p] = createRightSweepStateMachine();
-			}
-			piperState[p] = 0;
-		}
-	}
+        //There's just one piper, so every index is 0
+        piperStateMachine[0] = createHunterStateMachine();
+        piperState[0] = 0;
+    }
 
-	public void play(Point[][] pipers, boolean[][] pipers_played,
-	                 Point[] rats, Move[] moves) {
+    public void play(Point[][] pipers, boolean[][] pipers_played,
+                     Point[] rats, Move[] moves) {
+
         try {
-            for (int p = 0; p != pipers[id].length; ++p) {
 
-                Point src = pipers[id][p];
-                Point dst = piperStateMachine[p][piperState[p]];
+            int currentNumberOfRats = rats.length; 
+            double justOutsideGate_y = side * 0.5 - (80 - 70 * (double) (currentNumberOfRats / initNumberOfRats));
+            piperStateMachine[p][1] = Movement.makePoint(door, justOutsideGate_y, neg_y, swap);
 
-                if (isWithinDistance(src, dst, 0.00001)) {
-                    ++piperState[p];
-                    piperState[p] = piperState[p] % piperStateMachine[p].length;
-                    dst = piperStateMachine[p][piperState[p]];
-                }
-                int state = piperState[p];
-
-                moves[p] = Movement.makeMove(src, dst, play(state));
+            int state = piperState[p];
+            //Chase down any lost rats
+            if (state == 3 && noRatsAreWithinRange(pipers[id][p], rats, 10)) {
+                piperState[p] = 2;
             }
-        }catch(NullPointerException e){
-            e.printStackTrace();
-        }catch(Exception e){
+
+            if (state == 2) {
+                piperStateMachine[p][piperState[p]] = findClosest(pipers[id][p], rats);
+            }
+
+            Point src = pipers[id][p];
+            Point dst = piperStateMachine[p][piperState[p]];
+
+            if (state == 2 && isWithinDistance(src, dst, 3)) {
+                ++piperState[p];
+                piperState[p] = piperState[p] % piperStateMachine[p].length;
+                dst = piperStateMachine[p][piperState[p]];
+            }
+
+            else if (isWithinDistance(src, dst, 0.05)) {
+                ++piperState[p];
+                piperState[p] = piperState[p] % piperStateMachine[p].length;
+                dst = piperStateMachine[p][piperState[p]];
+            }
+            state = piperState[p];
+            moves[p] = Movement.makeMove(src, dst, play(state));
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private boolean play(int state){
-        return (state  >= 2);
+    private boolean play(int state) {
+        return (state  >= 3);
     }
 
     private boolean isWithinDistance(Point src, Point dst, double error){
@@ -98,52 +115,60 @@ public class OnePiperStrategy implements pppp.g3.Strategy {
         return false;
     }
 
-	private boolean isLeftSweep(int p){
-		return p < numberOfPipers/2;
-	}
+    private boolean isInArena(Point pos){
+        return (Math.abs(pos.x) < side/2 && Math.abs(pos.y) < side/2);
+    }
 
-	private Point[] createLeftSweepStateMachine() {
-		// magnet pipers have 4 states
-		Point[] pos = new Point [5];
+    public boolean isNearGate(Point p, double distance){
+        return (Movement.distance(p, gateEntrance) < distance);
+    }
 
-        // go to gate entrance
-		pos[0] = gateEntrance;
+    private boolean noRatsAreWithinRange(Point piper, Point[] rats, double distance){
+        for(Point rat:rats){
+            if(rat == null){
+                continue;
+            }
+            if(Movement.distance(piper, rat) < distance){
+                return false;
+            }
+        }
+        return true;
+    }
 
-        // go to opposite gate
-		pos[1] = Movement.makePoint(-30, -25, neg_y, swap);
+    // finds closest rat in direction away from the gate
+    public Point findClosest(Point start, Point[] ends) {
+        double c_dist;
+        double dist_from_gate;
+        double closest_distance = Double.MAX_VALUE;
+        int closest = 0;
 
-        //go back to gate entrance
-		pos[2] = Movement.makePoint(-10, 25, neg_y, swap);
+        for (int i = 0; i < ends.length; i++) {
+            dist_from_gate = Movement.distance(gateEntrance, ends[i]);
+            c_dist = Movement.distance(start, ends[i]);
 
-        pos[3] = gateEntrance;
+            if (c_dist < closest_distance && dist_from_gate > 10) {
+                closest = i;
+                closest_distance = c_dist;
+            }
+        }
+        return ends[closest];
+    }
 
-        // Move inside the gate to deposit rats
-		pos[4] = insideGate;
-
-        //pos[4] = pos[3]; // figure out waiting
-		return pos;
-	}
-
-	private Point[] createRightSweepStateMachine() {
-        // magnet pipers have 4 states
+    private Point[] createHunterStateMachine() {
+        // Hunters have a 5 state machine
         Point[] pos = new Point [5];
 
         // go to gate entrance
         pos[0] = gateEntrance;
-
-        // go to opposite gate
-        pos[1] = Movement.makePoint(30, -25, neg_y, swap);
-
-        //go back to gate entrance
-        pos[2] = Movement.makePoint(10, 25, neg_y, swap);
-
+        // go just outside gate
+        pos[1] = justOutsideGate;
+        //Now find closest rat
+        pos[2] = justOutsideGate;
+        // move inside gate
         pos[3] = gateEntrance;
 
-        // Move inside the gate to deposit rats
         pos[4] = insideGate;
 
-        //pos[4] = pos[3]; // figure out waiting
         return pos;
-	}
-
+    }
 }

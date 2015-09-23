@@ -20,7 +20,7 @@ public class StrategyFactory{
 		if (currentStrategy != null) {
 			return currentStrategy;
 		}
-		switch (piper[id].length) {
+		switch (pipers[id].length) {
 			case 1: 
 				currentStrategy = new OnePiperStrategy();
 				break;
