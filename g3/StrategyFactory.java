@@ -52,7 +52,7 @@ public class StrategyFactory{
 				currentStrategy = new TenPiperStrategy();
 				break;
 			default:
-				currentStrategy = new DefaultStrategy();
+				currentStrategy = new HunterSweep();
 				break;
 		}
 
