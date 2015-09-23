@@ -8,7 +8,7 @@ import pppp.g3.Strategy;
 import java.lang.Double;
 import java.lang.System;
 
-public class ModifiedSweep2 implements pppp.g3.Strategy {
+public class AngularSweep implements pppp.g3.Strategy {
 
     private int id = -1;
 	private int side = 0;
@@ -113,7 +113,7 @@ public class ModifiedSweep2 implements pppp.g3.Strategy {
 		pos[1] = Movement.makePoint(-30, -25, neg_y, swap);
 
         //go back to gate entrance
-		pos[2] = Movement.makePoint(-30, 25, neg_y, swap);
+		pos[2] = Movement.makePoint(-10, 25, neg_y, swap);
 
         pos[3] = gateEntrance;
 
@@ -135,7 +135,7 @@ public class ModifiedSweep2 implements pppp.g3.Strategy {
         pos[1] = Movement.makePoint(30, -25, neg_y, swap);
 
         //go back to gate entrance
-        pos[2] = Movement.makePoint(30, 25, neg_y, swap);
+        pos[2] = Movement.makePoint(10, 25, neg_y, swap);
 
         pos[3] = gateEntrance;
 
