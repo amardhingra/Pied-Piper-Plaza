@@ -22,12 +22,10 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
 
     private Point gateEntrance = null;
     private Point insideGate = null;
+    private Point outsideGate = null;
 
-    private int numberOfHunters = 0;
-    private int numberOfMagnets = 0;
-
-    private int magnetNumber = 0;
-	private int sparseCutoff = 10;
+    private final int MAX_CIRCLE_COUNT = 10;
+    private int circleCounter = 0;
 
 	public void init(int id, int side, long turns,
 	                 Point[][] pipers, Point[] rats){
@@ -43,6 +41,7 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
         // create gate positions
         gateEntrance = Movement.makePoint(door, side * 0.5, neg_y, swap);
         insideGate = Movement.makePoint(door, side * 0.5 + 7.5, neg_y, swap);
+        outsideGate = Movement.makePoint(door, side * 0.5 - 7.5, neg_y, swap);
 
         // create the state machines for the pipers
 		numberOfPipers = pipers[id].length;
@@ -50,41 +49,172 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
 		piperState = new int [numberOfPipers];
 
 		for (int p = 0 ; p != numberOfPipers; ++p) {
-			if (isLeftSweep(p)) {
-				piperStateMachine[p] = createLeftSweepStateMachine();
-			} else {
-				piperStateMachine[p] = createRightSweepStateMachine();
-			}
+			piperStateMachine[p] = generateStateMachine(p);
 			piperState[p] = 0;
 		}
 	}
 
 	public void play(Point[][] pipers, boolean[][] pipers_played,
 	                 Point[] rats, Move[] moves) {
-        try {
-            for (int p = 0; p != pipers[id].length; ++p) {
+        Point src, dst;
+        for(int p = 0; p < numberOfPipers; p++){
+            int state = piperState[p];
+            boolean play = false;
+            src = pipers[id][p];
+            dst = piperStateMachine[p][state];
 
-                Point src = pipers[id][p];
-                Point dst = piperStateMachine[p][piperState[p]];
-
-                if (isWithinDistance(src, dst, 0.00001)) {
-                    ++piperState[p];
-                    piperState[p] = piperState[p] % piperStateMachine[p].length;
-                    dst = piperStateMachine[p][piperState[p]];
+            if(state == 0){
+                if(isWithinDistance(src, dst, 0.00001)){
+                    piperState[p] = state = 1;
+                    dst = piperStateMachine[p][state];
                 }
-                int state = piperState[p];
-
-                moves[p] = Movement.makeMove(src, dst, play(state));
             }
-        }catch(NullPointerException e){
-            e.printStackTrace();
-        }catch(Exception e){
-            e.printStackTrace();
+
+            else if (state == 1) {
+                if(isWithinDistance(src, dst, 0.00001)){
+                    piperState[p] = state = 2;
+                    dst = src;
+                    play = true;
+                }
+            }
+
+            else if (state == 2) {
+                if(allPipersAreAtLeastState(2)){
+                    piperState[p] = state = 3;
+                    dst = piperStateMachine[p][state];
+                } else {
+                    dst = src;
+                }
+                play = true;
+
+            }
+
+            else if (state == 3) {
+                if(isWithinDistance(src, dst, 0.00001)){
+                    piperState[p] = state = 4;
+                    dst = piperStateMachine[p][state];
+                    play = true;
+                }
+                play = true;
+            }
+
+            else if (state == 4) {
+                if(isWithinDistance(src, dst, 0.00001)){
+                    piperState[p] = state = 5;
+                    dst = piperStateMachine[p][state];
+                    play = true;
+                }
+                play = true;
+            }
+
+            else if (state == 5) {
+                if(isWithinDistance(src, dst, 0.00001)){
+                    piperState[p] = state = 6;
+                    dst = src;
+                }
+                play = true;
+            }
+
+            else if (state == 6) {
+                if(allPipersAreAtLeastState(6)){
+                    piperState[p] = state = 7;
+                    dst = piperStateMachine[p][state];
+                } else {
+                    dst = src;
+                }
+                play = true;
+            }
+
+            else if (state == 7) {
+                dst = gateEntrance;
+                if(isWithinDistance(src, dst, 0.00001)){
+                    piperState[p] = state = 8;
+                    dst = findNearestRat(pipers, rats, p);
+                    piperStateMachine[p][8] = dst;
+                }
+            }
+
+            else if (state == 8) {
+                if(isWithinDistance(src, dst, 0.00001)){
+                    piperState[p] = state = 9;
+                    dst = piperStateMachine[p][state];
+                    play = true;
+                } else {
+                    dst = findNearestRat(pipers, rats, p);
+                    piperStateMachine[p][8] = dst;
+                }
+            }
+
+            else if (state == 9) {
+                if(isWithinDistance(src, dst, 0.00001)){
+                    piperState[p] = state = 10;
+                    dst = piperStateMachine[p][state];
+                    play = true;
+                }
+
+                else if(noRatsAreWithinRange(pipers[id][p], rats, 10)){
+                    piperState[p] = state = 8;
+                    dst = findNearestRat(pipers, rats, p);
+                    piperStateMachine[p][8] = dst;
+                }
+                play = true;
+            } else if (state == 10) {
+                if(isWithinDistance(src, dst, 0.00001)){
+                    piperState[p] = state = 7;
+                    dst = piperStateMachine[p][state];
+                    play = true;
+                }
+
+                play = true;
+            }
+
+
+            else {
+                System.out.println("Piper " + p + " is in state " + state);
+            }
+
+
+            if(isWithinDistance(src, dst, 0.00001) && state == 0){
+                piperState[p] = ++piperState[p] % piperStateMachine[p].length;
+                state = piperState[p];
+                dst = piperStateMachine[p][state];
+            }
+
+            moves[p] = Movement.makeMove(src, dst, play);
         }
     }
 
-    private boolean play(int state){
-        return (state  >= 2);
+    private Point findNearestRat(Point[][] pipers, Point[] rats, int p){
+        Point piper = pipers[id][p];
+        double minDist = Double.MAX_VALUE;
+        Point closestRat = null;
+        int index = -1;
+        for(int i = 0; i < rats.length; ++i){
+            if(i%(p+1) != 0){
+                continue;
+            }
+
+            Point rat = rats[i];
+            if(rat == null){
+                continue;
+            }
+            double dist = Movement.distance(piper, rat);
+            if(dist < minDist){
+                minDist = dist;
+                closestRat = rat;
+            }
+        }
+
+
+        return closestRat;
+    }
+
+    private boolean allPipersAreAtLeastState(int state){
+        for(int i = 0; i < numberOfPipers; i++){
+            if(piperState[i] < state)
+                return false;
+        }
+        return true;
     }
 
     private boolean isWithinDistance(Point src, Point dst, double error){
@@ -98,52 +228,49 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
         return false;
     }
 
-	private boolean isLeftSweep(int p){
-		return p < numberOfPipers/2;
-	}
+    private boolean noRatsAreWithinRange(Point piper, Point[] rats, double distance){
+        for(Point rat:rats){
+            if(rat == null){
+                continue;
+            }
+            if(Movement.distance(piper, rat) < distance){
+                return false;
+            }
+        }
+        return true;
+    }
 
-	private Point[] createLeftSweepStateMachine() {
-		// magnet pipers have 4 states
-		Point[] pos = new Point [5];
+	private Point[] generateStateMachine(int p){
 
-        // go to gate entrance
-		pos[0] = gateEntrance;
+        Point[] states = new Point[11];
 
-        // go to opposite gate
-		pos[1] = Movement.makePoint(-30, -25, neg_y, swap);
+        states[0] = gateEntrance;
 
-        //go back to gate entrance
-		pos[2] = Movement.makePoint(-10, 25, neg_y, swap);
+        if(p == 1) p = 0;
+        if(p == 8) p = 9;
+        double theta = Math.toRadians(p * 90.0/(numberOfPipers - 1) + 45);
 
-        pos[3] = gateEntrance;
+        states[1] = Movement.makePoint(side/2 * Math.cos(theta), side/2 - (side * 0.4 * Math.sin(theta)), neg_y, swap);
 
-        // Move inside the gate to deposit rats
-		pos[4] = insideGate;
+        states[2] = null;
 
-        //pos[4] = pos[3]; // figure out waiting
-		return pos;
-	}
+        states[3] = outsideGate;
 
-	private Point[] createRightSweepStateMachine() {
-        // magnet pipers have 4 states
-        Point[] pos = new Point [5];
+        states[4] = gateEntrance;
 
-        // go to gate entrance
-        pos[0] = gateEntrance;
+        states[5] = insideGate;
 
-        // go to opposite gate
-        pos[1] = Movement.makePoint(30, -25, neg_y, swap);
+        states[6] = null;
 
-        //go back to gate entrance
-        pos[2] = Movement.makePoint(10, 25, neg_y, swap);
+        states[7] = gateEntrance;
 
-        pos[3] = gateEntrance;
+        states[8] = null;
 
-        // Move inside the gate to deposit rats
-        pos[4] = insideGate;
+        states[9] = gateEntrance;
 
-        //pos[4] = pos[3]; // figure out waiting
-        return pos;
-	}
+        states[10] = insideGate;
 
+        return states;
+
+    }
 }
