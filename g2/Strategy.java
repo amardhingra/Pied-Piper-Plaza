@@ -1,16 +1,35 @@
 package pppp.g2;
 
-import pppp.sim.Point;
-import pppp.sim.Move;
+import java.util.HashMap;
+import java.util.Map;
 
-import java.util.*;
+/**
+ * Created by naman on 9/20/15.
+ */
+public class Strategy {
 
-public interface Strategy {
+    public StrategyType type;
+    public Map<String, Object> properties;
 
-	public void init(int id, int side, long turns,
-	                 Point[][] pipers, Point[] rats);
+    public Strategy() {
+        this.type = StrategyType.diffusion;
+        this.properties = new HashMap<String, Object>();
+    }
 
-	public void play(Point[][] pipers, boolean[][] pipers_played,
-	                 Point[] rats, Move[] moves);
+    public Strategy(StrategyType type) {
+        this.type = type;
+        this.properties = new HashMap<String, Object>();
+    }
 
+    public Object getProperty(String property) {
+        return this.properties.get(property);
+    }
+
+    public void setProperty(String name, Object val) {
+        this.properties.put(name, val);
+    }
+
+    public boolean isPropertySet(String property) {
+        return this.properties.containsKey(property);
+    }
 }
