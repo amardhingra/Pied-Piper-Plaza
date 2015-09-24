@@ -63,6 +63,9 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
             src = pipers[id][p];
             dst = piperStateMachine[p][state];
 
+            //if(state > 6)
+                //System.err.println(state);
+
             if(state == 0){
                 if(isWithinDistance(src, dst, 0.00001)){
                     piperState[p] = state = 1;
@@ -151,8 +154,7 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
                     dst = piperStateMachine[p][state];
                     play = true;
                 }
-
-                else if(noRatsAreWithinRange(pipers[id][p], rats, 10)){
+                else if(noRatsAreWithinRange(pipers[id][p], pipers, rats, 2.5)){
                     piperState[p] = state = 8;
                     dst = findNearestRat(pipers, rats, p);
                     piperStateMachine[p][8] = dst;
@@ -190,7 +192,7 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
         Point closestRat = null;
         int index = -1;
         for(int i = 0; i < rats.length; ++i){
-            if(i%(p+1) != 0){
+            if(i%(numberOfPipers - (p)) != 0){
                 continue;
             }
 
@@ -228,11 +230,12 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
         return false;
     }
 
-    private boolean noRatsAreWithinRange(Point piper, Point[] rats, double distance){
+    private boolean noRatsAreWithinRange(Point piper, Point[][] pipers, Point[] rats, double distance){
         for(Point rat:rats){
             if(rat == null){
                 continue;
             }
+
             if(Movement.distance(piper, rat) < distance){
                 return false;
             }
@@ -247,10 +250,11 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
         states[0] = gateEntrance;
 
         if(p == 1) p = 0;
-        if(p == 8) p = 9;
+        if(p == numberOfPipers - 2) p = numberOfPipers - 1;
+
         double theta = Math.toRadians(p * 90.0/(numberOfPipers - 1) + 45);
 
-        states[1] = Movement.makePoint(side/2 * Math.cos(theta), side/2 - (side * 0.4 * Math.sin(theta)), neg_y, swap);
+        states[1] = Movement.makePoint(side/2 * Math.cos(theta), side/2 - (side * 0.5 * Math.sin(theta)), neg_y, swap);
 
         states[2] = null;
 
