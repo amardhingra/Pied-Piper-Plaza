@@ -3,7 +3,6 @@ package pppp.g4;
 import java.util.Random;
 
 import pppp.sim.Point;
-import pppp.sim.WinnerInfo;
 
 public class Utils {
 
