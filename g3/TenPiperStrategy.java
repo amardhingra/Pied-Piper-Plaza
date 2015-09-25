@@ -27,6 +27,9 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
     private final int MAX_CIRCLE_COUNT = 10;
     private int circleCounter = 0;
 
+    private int together[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+
 	public void init(int id, int side, long turns,
 	                 Point[][] pipers, Point[] rats){
 		// storing variables
@@ -52,13 +55,16 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
 			piperStateMachine[p] = generateStateMachine(p);
 			piperState[p] = 0;
 		}
+
+        System.out.println("asdfsafasdf");
 	}
 
 	public void play(Point[][] pipers, boolean[][] pipers_played,
 	                 Point[] rats, Move[] moves) {
         Point src, dst;
+        int state;
         for(int p = 0; p < numberOfPipers; p++){
-            int state = piperState[p];
+            state = piperState[p];
             boolean play = false;
             src = pipers[id][p];
             dst = piperStateMachine[p][state];
@@ -127,14 +133,21 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
 
             else if (state == 7) {
                 dst = gateEntrance;
-                if(isWithinDistance(src, dst, 0.00001)){
+                if (isWithinDistance(src, dst, 0.00001)) {
+                    together[p] = 1;
+                }
+                if (sum(together) == 10) {
                     piperState[p] = state = 8;
                     dst = findNearestRat(pipers, rats, p);
                     piperStateMachine[p][8] = dst;
                 }
+
             }
 
             else if (state == 8) {
+                for (int i=0; i<numberOfPipers; i++){
+                    together[i] = 0;
+                }
                 if(isWithinDistance(src, dst, 0.00001)){
                     piperState[p] = state = 9;
                     dst = piperStateMachine[p][state];
@@ -166,10 +179,7 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
                 }
 
                 play = true;
-            }
-
-
-            else {
+            } else {
                 System.out.println("Piper " + p + " is in state " + state);
             }
 
@@ -207,6 +217,14 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
 
 
         return closestRat;
+    }
+
+    private int sum(int[] x){
+        int s = 0;
+        for (int y : x){
+            s += y;
+        }
+        return s;
     }
 
     private boolean allPipersAreAtLeastState(int state){
