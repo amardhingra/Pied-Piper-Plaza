@@ -27,6 +27,8 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
     private final int MAX_CIRCLE_COUNT = 10;
     private int circleCounter = 0;
 
+    private int minSweepNumber = 40;
+
 	public void init(int id, int side, long turns,
 	                 Point[][] pipers, Point[] rats){
 		// storing variables
@@ -50,13 +52,21 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
 
 		for (int p = 0 ; p != numberOfPipers; ++p) {
 			piperStateMachine[p] = generateStateMachine(p);
-			piperState[p] = 0;
-		}
+            piperState[p] = 0;
+		    if(rats.length <= minSweepNumber){
+                piperState[p] = 7;
+            }
+        }
 	}
 
 	public void play(Point[][] pipers, boolean[][] pipers_played,
 	                 Point[] rats, Move[] moves) {
         Point src, dst;
+
+        sortRats(rats);
+
+        short[] pipersAssignedToRat = new short[rats.length];
+
         for(int p = 0; p < numberOfPipers; p++){
             int state = piperState[p];
             boolean play = false;
@@ -154,7 +164,7 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
                     dst = piperStateMachine[p][state];
                     play = true;
                 }
-                else if(noRatsAreWithinRange(pipers[id][p], pipers, rats, 2.5)){
+                else if(noRatsAreWithinRange(pipers[id][p], rats, 5)){
                     piperState[p] = state = 8;
                     dst = findNearestRat(pipers, rats, p);
                     piperStateMachine[p][8] = dst;
@@ -186,7 +196,46 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
         }
     }
 
+    private void sortRats(Point[] rats) {
+        Point closestRat = null;
+        double minDist = 0;
+        int index = -1;
+        for (int i = 0; i < rats.length; i++) {
+            minDist = Movement.distance(gateEntrance, rats[i]);
+            closestRat = rats[i];
+            index = i;
+            for (int j = i; j < rats.length; j++) {
+                double dist = Movement.distance(gateEntrance, rats[j]);
+                if (dist < minDist) {
+                    index = j;
+                    minDist = dist;
+                    closestRat = rats[j];
+                }
+            }
+            Point temp = rats[i];
+            rats[i] = rats[index];
+            rats[index] = temp;
+        }
+    }
+
+    private Point findNearestRat(Point[][] pipers, Point[] rats, short[] pipersAssigned, int p){
+
+
+        if(rats.length < numberOfPipers){
+            return rats[p%rats.length];
+        }
+
+        int i = 0;
+        while(pipersAssigned[i] == i){
+            i++;
+        }
+        pipersAssigned[i]++;
+        return rats[i];
+
+    }
+
     private Point findNearestRat(Point[][] pipers, Point[] rats, int p){
+
         Point piper = pipers[id][p];
         double minDist = Double.MAX_VALUE;
         Point closestRat = null;
@@ -207,8 +256,12 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
             }
         }
 
+        if(minDist <= side/5){
+            return closestRat;
+        }
 
-        return closestRat;
+        return rats[p % rats.length];
+
     }
 
     private boolean allPipersAreAtLeastState(int state){
@@ -230,17 +283,26 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
         return false;
     }
 
-    private boolean noRatsAreWithinRange(Point piper, Point[][] pipers, Point[] rats, double distance){
+    private boolean noRatsAreWithinRange(Point piper, Point[] rats, double distance){
         for(Point rat:rats){
             if(rat == null){
                 continue;
             }
-
             if(Movement.distance(piper, rat) < distance){
                 return false;
             }
         }
         return true;
+    }
+
+    private boolean teamPiperIsHelping(Point[][] pipers, int p, double distance){
+        for (int i = 0; i < pipers[id].length; ++i) {
+                if(i == p)
+                    continue;
+                if(Movement.distance(pipers[id][i], pipers[id][p]) < distance)
+                    return true;
+            }
+        return false;
     }
 
 	private Point[] generateStateMachine(int p){
@@ -258,7 +320,7 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
 
         states[2] = null;
 
-        states[3] = outsideGate;
+        states[3] = gateEntrance;
 
         states[4] = gateEntrance;
 
