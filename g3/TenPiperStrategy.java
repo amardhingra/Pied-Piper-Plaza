@@ -53,9 +53,7 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
 		for (int p = 0 ; p != numberOfPipers; ++p) {
 			piperStateMachine[p] = generateStateMachine(p);
             piperState[p] = 0;
-		    if(rats.length <= minSweepNumber){
-                piperState[p] = 7;
-            }
+		    
         }
 	}
 
