@@ -149,6 +149,7 @@ public class Player implements pppp.sim.Player {
 	public void play(Point[][] pipers, boolean[][] pipers_played,
 			Point[] rats, Move[] moves)
 	{
+		try {
 		density = rats.length / (double) side;
 
 		for (int p = 0; p < pipers[id].length; p++) {
@@ -163,6 +164,10 @@ public class Player implements pppp.sim.Player {
 			else 
 				sparseStrategy(pipers,pipers_played, rats, moves);
 		}
+	}
+	catch (Exception e) {
+		
+	}
 	}
 
 

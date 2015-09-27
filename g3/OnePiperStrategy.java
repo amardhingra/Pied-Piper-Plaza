@@ -11,6 +11,8 @@ import java.lang.System;
 public class OnePiperStrategy implements pppp.g3.Strategy {
 
     public static final int PIPER_RADIUS = 10;
+    public static final int PIPER_RUN_SPEED = 5; 
+    public static final int PIPER_WALK_SPEED = 1;
 
     //Because in this class p is always 0.
     private static int p = 0;
@@ -75,14 +77,10 @@ public class OnePiperStrategy implements pppp.g3.Strategy {
             }
 
             int currentNumberOfRats = rats.length; 
-            double y_depth = 10 + side * (1 - (((double) currentNumberOfRats / initNumberOfRats)));
-            double justOutsideGate_y = side * 0.5 - y_depth;
+            // double y_depth = 10 + side * (1 - (((double) currentNumberOfRats / initNumberOfRats)));
+            // double justOutsideGate_y = side * 0.5 - y_depth;
 
-            //Here update the x-coordinate so that it veers towards higher density areas
-            Point densest = densestPoint(pipers, pipers_played, rats);
-            // System.out.println(densest);
-
-            piperStateMachine[p][1] = Movement.makePoint(door, justOutsideGate_y, neg_y, swap);
+            // piperStateMachine[p][1] = Movement.makePoint(door, justOutsideGate_y, neg_y, swap);
 
             state = piperState[p];
             //Chase down any lost rats
@@ -91,7 +89,7 @@ public class OnePiperStrategy implements pppp.g3.Strategy {
             }
 
             if (state == 2) {
-                piperStateMachine[p][piperState[p]] = findClosest(pipers[id][p], rats);
+                piperStateMachine[p][piperState[p]] = densestPoint(pipers, pipers_played, rats);
             }
 
             src = pipers[id][p];
@@ -151,20 +149,30 @@ public class OnePiperStrategy implements pppp.g3.Strategy {
         return true;
     }
 
+    /*
+    * Also needs to consider how far away this point is from the gate. Basically a cost function.
+    */
     private Point densestPoint(Point[][] pipers, boolean[][] pipers_played,
                      Point[] rats) {
 
-        Point densest = null;
-        int mostRatsNearPoint = 0;
+        Point thisPiper = pipers[id][p];
+        Point densest = Movement.makePoint(0, 0, neg_y, swap);
+        double bestReward = 0;
 
         //Go through candidate points and find point with 
-        for (int i = - side/2; i < side/2; i = i+side/20) {
-            for (int j = -side/2; j < side/2; j = j+side/20) {
+        for (int i = - side/2; i < side/2; i = i+side/10) {
+            for (int j = -side/2; j < side/2; j = j+side/10) {
                 Point p = Movement.makePoint(i, j, neg_y, swap);
-                int numberOfRatsNearPoint = numberOfRatsWithinXMetersOfPoint(p, 
-                    PIPER_RADIUS, rats);
-                if (numberOfRatsNearPoint > mostRatsNearPoint) {
-                    mostRatsNearPoint = numberOfRatsNearPoint;
+
+                double distanceFromPiperToPoint = PIPER_WALK_SPEED * Movement.distance(p, thisPiper);
+                double distanceToGate = PIPER_RUN_SPEED * Movement.distance(p, gateEntrance);
+                int numberOfRatsNearPoint = (int) Math.pow(numberOfRatsWithinXMetersOfPoint(p, 
+                    PIPER_RADIUS, rats), 2);
+
+                double reward = numberOfRatsNearPoint / (distanceFromPiperToPoint + distanceToGate);
+
+                if (reward > bestReward) {
+                    bestReward = reward;
                     densest = p;
                 }
             }
