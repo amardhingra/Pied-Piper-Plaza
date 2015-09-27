@@ -25,7 +25,7 @@ public class StrategyFactory{
 				currentStrategy = new OnePiperStrategy();
 				break;
 			case 2: 
-				currentStrategy = new TwoPiperStrategy();
+				currentStrategy = new FourPiperStrategy();
 				break;
 			case 3: 
 				currentStrategy = new ThreePiperStrategy();
@@ -37,10 +37,10 @@ public class StrategyFactory{
 				currentStrategy = new FivePiperStrategy();
 				break;
 			case 6: 
-				currentStrategy = new SixPiperStrategy();
+				currentStrategy = new FourPiperStrategy();
 				break;
 			case 7: 
-				currentStrategy = new SevenPiperStrategy();
+				currentStrategy = new FourPiperStrategy();
 				break;
 			case 8: 
 				currentStrategy = new TenPiperStrategy();
