@@ -10,6 +10,8 @@ import java.lang.System;
 
 public class OnePiperStrategy implements pppp.g3.Strategy {
 
+    public static final int PIPER_RADIUS = 10;
+
     //Because in this class p is always 0.
     private static int p = 0;
 
@@ -61,14 +63,28 @@ public class OnePiperStrategy implements pppp.g3.Strategy {
 
     public void play(Point[][] pipers, boolean[][] pipers_played,
                      Point[] rats, Move[] moves) {
+        Point dst, src;
 
         try {
+            int state = piperState[p];
+            if (state == 4 && !noRatsAreWithinRange(pipers[id][p], rats, PIPER_RADIUS)) {
+                dst = piperStateMachine[p][piperState[p]];
+                src = pipers[id][p];
+                moves[p] = Movement.makeMove(src, dst, play(state));
+                return;
+            }
 
             int currentNumberOfRats = rats.length; 
-            double justOutsideGate_y = side * 0.5 - (80 - 70 * (double) (currentNumberOfRats / initNumberOfRats));
+            double y_depth = 10 + side * (1 - (((double) currentNumberOfRats / initNumberOfRats)));
+            double justOutsideGate_y = side * 0.5 - y_depth;
+
+            //Here update the x-coordinate so that it veers towards higher density areas
+            Point densest = densestPoint(pipers, pipers_played, rats);
+            // System.out.println(densest);
+
             piperStateMachine[p][1] = Movement.makePoint(door, justOutsideGate_y, neg_y, swap);
 
-            int state = piperState[p];
+            state = piperState[p];
             //Chase down any lost rats
             if (state == 3 && noRatsAreWithinRange(pipers[id][p], rats, 10)) {
                 piperState[p] = 2;
@@ -78,8 +94,8 @@ public class OnePiperStrategy implements pppp.g3.Strategy {
                 piperStateMachine[p][piperState[p]] = findClosest(pipers[id][p], rats);
             }
 
-            Point src = pipers[id][p];
-            Point dst = piperStateMachine[p][piperState[p]];
+            src = pipers[id][p];
+            dst = piperStateMachine[p][piperState[p]];
 
             if (state == 2 && isWithinDistance(src, dst, 3)) {
                 ++piperState[p];
@@ -133,6 +149,41 @@ public class OnePiperStrategy implements pppp.g3.Strategy {
             }
         }
         return true;
+    }
+
+    private Point densestPoint(Point[][] pipers, boolean[][] pipers_played,
+                     Point[] rats) {
+
+        Point densest = null;
+        int mostRatsNearPoint = 0;
+
+        //Go through candidate points and find point with 
+        for (int i = - side/2; i < side/2; i = i+side/20) {
+            for (int j = -side/2; j < side/2; j = j+side/20) {
+                Point p = Movement.makePoint(i, j, neg_y, swap);
+                int numberOfRatsNearPoint = numberOfRatsWithinXMetersOfPoint(p, 
+                    PIPER_RADIUS, rats);
+                if (numberOfRatsNearPoint > mostRatsNearPoint) {
+                    mostRatsNearPoint = numberOfRatsNearPoint;
+                    densest = p;
+                }
+            }
+        }
+        return densest;
+    }
+
+    /*
+     * Here's some documentation to explain a function even though it explains itself
+     */
+    private int numberOfRatsWithinXMetersOfPoint(Point p, double x, Point[] rats) {
+        int result = 0;
+        for (Point rat : rats) {
+            double distanceFromPointToRat = Movement.distance(p, rat);
+            if (distanceFromPointToRat < x) {
+                result++;
+            }
+        }
+        return result;
     }
 
     // finds closest rat in direction away from the gate
