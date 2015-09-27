@@ -28,6 +28,7 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
     private int circleCounter = 0;
 
     private int minSweepNumber = 40;
+    private int together[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 	public void init(int id, int side, long turns,
 	                 Point[][] pipers, Point[] rats){
@@ -42,7 +43,7 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
 
         // create gate positions
         gateEntrance = Movement.makePoint(door, side * 0.5, neg_y, swap);
-        insideGate = Movement.makePoint(door, side * 0.5 + 7.5, neg_y, swap);
+        insideGate = Movement.makePoint(door, side * 0.5 + 2.5, neg_y, swap);
         outsideGate = Movement.makePoint(door, side * 0.5 - 7.5, neg_y, swap);
 
         // create the state machines for the pipers
@@ -62,17 +63,17 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
         Point src, dst;
 
         sortRats(rats);
-
         short[] pipersAssignedToRat = new short[rats.length];
 
+        int state;
+
         for(int p = 0; p < numberOfPipers; p++){
-            int state = piperState[p];
+            state = piperState[p];
             boolean play = false;
             src = pipers[id][p];
             dst = piperStateMachine[p][state];
 
-            //if(state > 6)
-                //System.err.println(state);
+            //System.err.println(state);
 
             if(state == 0){
                 if(isWithinDistance(src, dst, 0.00001)){
@@ -138,14 +139,18 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
 
             else if (state == 7) {
                 dst = gateEntrance;
-                if(isWithinDistance(src, dst, 0.00001)){
+                if (isWithinDistance(src, dst, 0.00001)) {
                     piperState[p] = state = 8;
                     dst = findNearestRat(pipers, rats, p);
                     piperStateMachine[p][8] = dst;
                 }
+
             }
 
             else if (state == 8) {
+                for (int i=0; i<numberOfPipers; i++){
+                    together[i] = 0;
+                }
                 if(isWithinDistance(src, dst, 0.00001)){
                     piperState[p] = state = 9;
                     dst = piperStateMachine[p][state];
@@ -176,10 +181,7 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
                 }
 
                 play = true;
-            }
-
-
-            else {
+            } else {
                 System.out.println("Piper " + p + " is in state " + state);
             }
 
@@ -262,6 +264,14 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
 
     }
 
+    private int sum(int[] x){
+        int s = 0;
+        for (int y : x){
+            s += y;
+        }
+        return s;
+    }
+
     private boolean allPipersAreAtLeastState(int state){
         for(int i = 0; i < numberOfPipers; i++){
             if(piperState[i] < state)
@@ -318,7 +328,7 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
 
         states[2] = null;
 
-        states[3] = gateEntrance;
+        states[3] = outsideGate;
 
         states[4] = gateEntrance;
 
