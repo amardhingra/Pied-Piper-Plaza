@@ -43,8 +43,8 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
 
         // create gate positions
         gateEntrance = Movement.makePoint(door, side * 0.5, neg_y, swap);
-        insideGate = Movement.makePoint(door, side * 0.5 + 2.5, neg_y, swap);
-        outsideGate = Movement.makePoint(door, side * 0.5 - 7.5, neg_y, swap);
+        insideGate = Movement.makePoint(door, side * 0.5 + 5, neg_y, swap);
+        outsideGate = Movement.makePoint(door, side * 0.5 - 5, neg_y, swap);
 
         // create the state machines for the pipers
 		numberOfPipers = pipers[id].length;
@@ -148,10 +148,7 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
             }
 
             else if (state == 8) {
-                for (int i=0; i<numberOfPipers; i++){
-                    together[i] = 0;
-                }
-                if(isWithinDistance(src, dst, 0.00001)){
+                if(isWithinDistance(src, dst, 0.001)){
                     piperState[p] = state = 9;
                     dst = piperStateMachine[p][state];
                     play = true;
@@ -256,11 +253,19 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
             }
         }
 
-        if(minDist <= side/5){
-            return closestRat;
+
+        if(minDist > side/5){
+             closestRat = rats[p % rats.length];
         }
 
-        return rats[p % rats.length];
+
+        Point closestPiper = findClosestPiper(pipers, closestRat, p);
+
+        if(closestPiper != null){
+            closestRat = closestPiper;
+        }
+
+        return closestRat;
 
     }
 
@@ -313,15 +318,26 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
         return false;
     }
 
+    private Point findClosestPiper(Point[][] pipers, Point closestRat, int p){
+
+        for(int i = 0; i < numberOfPipers; i++){
+            if(i == p)
+                continue;
+
+            if(Movement.distance(pipers[id][p], closestRat) <= 5){
+                return pipers[id][p];
+            }
+        }
+
+        return null;
+    }
+
 	private Point[] generateStateMachine(int p){
 
         Point[] states = new Point[11];
 
         states[0] = gateEntrance;
-
-        if(p == 1) p = 0;
-        if(p == numberOfPipers - 2) p = numberOfPipers - 1;
-
+        
         double theta = Math.toRadians(p * 90.0/(numberOfPipers - 1) + 45);
 
         states[1] = Movement.makePoint(side/2 * Math.cos(theta), side/2 - (side * 0.5 * Math.sin(theta)), neg_y, swap);
