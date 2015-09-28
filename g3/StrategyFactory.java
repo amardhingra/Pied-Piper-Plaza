@@ -39,24 +39,13 @@ public class StrategyFactory{
 				currentStrategy = new FivePiperStrategy();
 				break;
 			case 6: 
-				currentStrategy = new TenPiperStrategy();
-				break;
-			case 7: 
-				currentStrategy = new TenPiperStrategy();
-				break;
-			case 8: 
-				currentStrategy = new TenPiperStrategy();
-				break;
+			case 7:
+			case 8:
 			case 9:
-				currentStrategy = new TenPiperStrategy();
-				break;
 			case 10:
 			default:
-				currentStrategy = new TenPiperStrategy();
+				currentStrategy = new HighPiperStrategy();
 				break;
-			/*default:
-				currentStrategy = new HunterSweep();
-				break;*/
 		}
 
         currentStrategy.init(id, side, turns, pipers, rats);

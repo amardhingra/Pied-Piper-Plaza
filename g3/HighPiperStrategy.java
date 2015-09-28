@@ -9,7 +9,7 @@ import pppp.g3.Strategy;
 import java.lang.Double;
 import java.lang.System;
 
-public class TenPiperStrategy implements pppp.g3.Strategy {
+public class HighPiperStrategy implements pppp.g3.Strategy {
 
     public static final int PIPER_RADIUS = 10;
     public static final int PIPER_RUN_SPEED = 5;
