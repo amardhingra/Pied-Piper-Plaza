@@ -84,18 +84,16 @@ public class FourPiperStrategy implements pppp.g3.Strategy {
 
             else if (state == 1) {
                 if(isWithinDistance(src, dst, 0.00001)){
-                    piperState[p] = state = 2;
+                    piperState[p] = state = 3;
                     dst = src;
                     play = true;
                 }
             }
 
             else if (state == 2) {
-                if(allPipersAreAtLeastState(2)){
+                if(isWithinDistance(src, dst, 0.00001)){
                     piperState[p] = state = 3;
                     dst = piperStateMachine[p][state];
-                } else {
-                    dst = src;
                 }
                 play = true;
 
@@ -120,18 +118,16 @@ public class FourPiperStrategy implements pppp.g3.Strategy {
 
             else if (state == 5) {
                 if(isWithinDistance(src, dst, 0.00001) && noRatsAreWithinRange(pipers[id][p], rats, 10)){
-                    piperState[p] = state = 6;
+                    piperState[p] = state = 7;
                     dst = src;
                 }
                 play = true;
             }
 
             else if (state == 6) {
-                if(allPipersAreAtLeastState(6)){
+                if(isWithinDistance(src, dst, 0.00001)){
                     piperState[p] = state = 7;
                     dst = piperStateMachine[p][state];
-                } else {
-                    dst = src;
                 }
                 play = true;
             }

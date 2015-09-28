@@ -13,6 +13,8 @@ public class StrategyFactory{
 	final public static double piperPivot = 1;
 	final public static double ratPivot = 1;
 
+	public final static double RAT_DENSITY_THRESHOLD= 0.0025;
+
 	private Strategy currentStrategy = null;
 
 	public Strategy getStrategy(int id, int side, long turns, Point[][] pipers, Point[] rats){
@@ -37,10 +39,10 @@ public class StrategyFactory{
 				currentStrategy = new FivePiperStrategy();
 				break;
 			case 6: 
-				currentStrategy = new FourPiperStrategy();
+				currentStrategy = new TenPiperStrategy();
 				break;
 			case 7: 
-				currentStrategy = new FourPiperStrategy();
+				currentStrategy = new TenPiperStrategy();
 				break;
 			case 8: 
 				currentStrategy = new TenPiperStrategy();

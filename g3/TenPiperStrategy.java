@@ -53,7 +53,9 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
 		for (int p = 0 ; p != numberOfPipers; ++p) {
 			piperStateMachine[p] = generateStateMachine(p);
             piperState[p] = 0;
-		    
+            if(rats.length / (side * side) < pppp.g3.StrategyFactory.RAT_DENSITY_THRESHOLD) {
+                piperState[p] = 7;
+            }
         }
 	}
 
@@ -327,7 +329,10 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
                 }
             }
         }
-        return densest;
+
+        Point closestPiper = findClosestPiper(pipers, densest, p);
+
+        return closestPiper == null ? densest : closestPiper;
     }
 
     /*
@@ -352,7 +357,9 @@ public class TenPiperStrategy implements pppp.g3.Strategy {
 
         p %= 10;
 
-        double theta = Math.toRadians(p * 90.0/(Math.min(numberOfPipers, 10) - 1) + 45);
+        double spreadAngle = Math.min(90, numberOfPipers * 10);
+
+        double theta = Math.toRadians(p * spreadAngle/(Math.min(numberOfPipers, 10) - 1) + 90 - spreadAngle/2);
 
         states[1] = Movement.makePoint(side/2 * Math.cos(theta), side/2 - (side * 0.5 * Math.sin(theta)), neg_y, swap);
 
