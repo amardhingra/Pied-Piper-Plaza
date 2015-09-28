@@ -84,11 +84,13 @@ public class OnePiperStrategy implements pppp.g3.Strategy {
 
             state = piperState[p];
             //Chase down any lost rats
-            if (state == 3 && noRatsAreWithinRange(pipers[id][p], rats, 10)) {
+            if (state == 4 && noRatsAreWithinRange(pipers[id][p], rats, 10)) {
+                piperState[p] = 0;
+            }
+            else if (state == 3 && noRatsAreWithinRange(pipers[id][p], rats, 10)) {
                 piperState[p] = 2;
             }
-
-            if (state == 2) {
+            else if (state == 2) {
                 piperStateMachine[p][piperState[p]] = densestPoint(pipers, pipers_played, rats);
             }
 

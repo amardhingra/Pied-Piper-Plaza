@@ -26,17 +26,11 @@ public class StrategyFactory{
 			case 1: 
 				currentStrategy = new OnePiperStrategy();
 				break;
-			case 2: 
-				currentStrategy = new FourPiperStrategy();
-				break;
-			case 3: 
-				currentStrategy = new ThreePiperStrategy();
-				break;
+			case 2:
+			case 3:
 			case 4:
-				currentStrategy = new FourPiperStrategy(); 
-				break;
 			case 5: 
-				currentStrategy = new FivePiperStrategy();
+				currentStrategy = new MidPiperStrategy();
 				break;
 			case 6: 
 			case 7:

@@ -9,7 +9,7 @@ import java.lang.Double;
 import java.lang.System;
 import java.util.Arrays;
 
-public class FourPiperStrategy implements pppp.g3.Strategy {
+public class MidPiperStrategy implements pppp.g3.Strategy {
 
     public static final int PIPER_RADIUS = 10;
     public static final float PIPER_RUN_SPEED = 2.5f;
