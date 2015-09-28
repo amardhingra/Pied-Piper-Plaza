@@ -53,8 +53,8 @@ public class MidPiperStrategy implements pppp.g3.Strategy {
 
         for (int p = 0 ; p != numberOfPipers; ++p) {
             piperStateMachine[p] = generateStateMachine(p, rats);
-            piperState[p] = 0;
 
+            piperState[p] = 0;
         }
     }
 
@@ -199,8 +199,8 @@ public class MidPiperStrategy implements pppp.g3.Strategy {
         double bestReward = 0;
 
         //Go through candidate points and find point with
-        for (int i = - side/2; i < side/2; i = i+side/10) {
-            for (int j = -side/2; j < side/2; j = j+side/10) {
+        for (int i = - side/2; i < side/2; i = i+side/20) {
+            for (int j = -side/2; j < side/2; j = j+side/20) {
 
                 Point point = Movement.makePoint(i, j, neg_y, swap);
 
@@ -208,8 +208,8 @@ public class MidPiperStrategy implements pppp.g3.Strategy {
                 double distanceToGate = PIPER_RUN_SPEED * Movement.distance(point, gateEntrance);
                 int numberOfRatsNearPoint = (int) Math.pow(numberOfRatsWithinXMetersOfPoint(point,
                         PIPER_RADIUS, rats, p), 2);
-
-                double reward = numberOfRatsNearPoint / (distanceFromPiperToPoint + distanceToGate);
+                double numberOfPipersNearPoint = Math.sqrt(numberOfPipersWithinXMetersOfPoint(point, pipers, PIPER_RADIUS));
+                double reward = numberOfRatsNearPoint / (Math.pow(distanceFromPiperToPoint, 2) + distanceToGate) / (numberOfPipersNearPoint + 1);
 
                 if (reward > bestReward) {
                     bestReward = reward;
@@ -241,6 +241,21 @@ public class MidPiperStrategy implements pppp.g3.Strategy {
             }
         }
         return densest;
+    }
+
+
+    private int numberOfPipersWithinXMetersOfPoint(Point p, Point[][] pipers, double dist) {
+        int result = 0;
+        for(int i = 0; i < pipers.length; i++){
+            if(i == id)
+                continue;
+            for(int j = 0; j < pipers[i].length; j++){
+                if(Movement.distance(p, pipers[i][j]) < dist){
+                    ++result;
+                }
+            }
+        }
+        return result;
     }
 
 
@@ -313,13 +328,11 @@ public class MidPiperStrategy implements pppp.g3.Strategy {
         double theta = Math.toRadians(p * 45.0/(numberOfPipers - 1) + 67.5);
 
         Point min, max;
-        if(p < numberOfPipers/2) {
-            min = Movement.makePoint(-side/2, 0, neg_y, swap);
-            max = Movement.makePoint(0, side/2, neg_y, swap);
-        } else {
-            min = Movement.makePoint(0, 0, neg_y, swap);
-            max = Movement.makePoint(side/2, side/2, neg_y, swap);
-        }
+
+        min = Movement.makePoint(-side/2 + p * side/numberOfPipers, 0, neg_y, swap);
+        max = Movement.makePoint(-side/2 + (p+1) * side/numberOfPipers, side/2, neg_y, swap);
+
+
         states[1] = densestPointInArea(rats, p, (int) Math.min(min.x, max.x), (int) Math.max(min.x, max.x), (int) Math.min(min.y, max.y), (int) Math.max(min.y, max.y));
         //states[1] = Movement.makePoint(side/2 * Math.cos(theta), side/2 - (side * 0.4 * Math.sin(theta)), neg_y, swap);
 
