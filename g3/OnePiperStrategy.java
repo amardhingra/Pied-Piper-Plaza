@@ -10,6 +10,10 @@ import java.lang.System;
 
 public class OnePiperStrategy implements pppp.g3.Strategy {
 
+    public static final int PIPER_RADIUS = 10;
+    public static final int PIPER_RUN_SPEED = 5; 
+    public static final int PIPER_WALK_SPEED = 1;
+
     //Because in this class p is always 0.
     private static int p = 0;
 
@@ -61,25 +65,35 @@ public class OnePiperStrategy implements pppp.g3.Strategy {
 
     public void play(Point[][] pipers, boolean[][] pipers_played,
                      Point[] rats, Move[] moves) {
+        Point dst, src;
 
         try {
+            int state = piperState[p];
+            if (state == 4 && !noRatsAreWithinRange(pipers[id][p], rats, PIPER_RADIUS)) {
+                dst = piperStateMachine[p][piperState[p]];
+                src = pipers[id][p];
+                moves[p] = Movement.makeMove(src, dst, play(state));
+                return;
+            }
 
             int currentNumberOfRats = rats.length; 
-            double justOutsideGate_y = side * 0.5 - (80 - 70 * (double) (currentNumberOfRats / initNumberOfRats));
-            piperStateMachine[p][1] = Movement.makePoint(door, justOutsideGate_y, neg_y, swap);
+            // double y_depth = 10 + side * (1 - (((double) currentNumberOfRats / initNumberOfRats)));
+            // double justOutsideGate_y = side * 0.5 - y_depth;
 
-            int state = piperState[p];
+            // piperStateMachine[p][1] = Movement.makePoint(door, justOutsideGate_y, neg_y, swap);
+
+            state = piperState[p];
             //Chase down any lost rats
             if (state == 3 && noRatsAreWithinRange(pipers[id][p], rats, 10)) {
                 piperState[p] = 2;
             }
 
             if (state == 2) {
-                piperStateMachine[p][piperState[p]] = findClosest(pipers[id][p], rats);
+                piperStateMachine[p][piperState[p]] = densestPoint(pipers, pipers_played, rats);
             }
 
-            Point src = pipers[id][p];
-            Point dst = piperStateMachine[p][piperState[p]];
+            src = pipers[id][p];
+            dst = piperStateMachine[p][piperState[p]];
 
             if (state == 2 && isWithinDistance(src, dst, 3)) {
                 ++piperState[p];
@@ -133,6 +147,51 @@ public class OnePiperStrategy implements pppp.g3.Strategy {
             }
         }
         return true;
+    }
+
+    /*
+    * Also needs to consider how far away this point is from the gate. Basically a cost function.
+    */
+    private Point densestPoint(Point[][] pipers, boolean[][] pipers_played,
+                     Point[] rats) {
+
+        Point thisPiper = pipers[id][p];
+        Point densest = Movement.makePoint(0, 0, neg_y, swap);
+        double bestReward = 0;
+
+        //Go through candidate points and find point with 
+        for (int i = - side/2; i < side/2; i = i+side/10) {
+            for (int j = -side/2; j < side/2; j = j+side/10) {
+                Point p = Movement.makePoint(i, j, neg_y, swap);
+
+                double distanceFromPiperToPoint = PIPER_WALK_SPEED * Movement.distance(p, thisPiper);
+                double distanceToGate = PIPER_RUN_SPEED * Movement.distance(p, gateEntrance);
+                int numberOfRatsNearPoint = (int) Math.pow(numberOfRatsWithinXMetersOfPoint(p, 
+                    PIPER_RADIUS, rats), 2);
+
+                double reward = numberOfRatsNearPoint / (distanceFromPiperToPoint + distanceToGate);
+
+                if (reward > bestReward) {
+                    bestReward = reward;
+                    densest = p;
+                }
+            }
+        }
+        return densest;
+    }
+
+    /*
+     * Here's some documentation to explain a function even though it explains itself
+     */
+    private int numberOfRatsWithinXMetersOfPoint(Point p, double x, Point[] rats) {
+        int result = 0;
+        for (Point rat : rats) {
+            double distanceFromPointToRat = Movement.distance(p, rat);
+            if (distanceFromPointToRat < x) {
+                result++;
+            }
+        }
+        return result;
     }
 
     // finds closest rat in direction away from the gate
