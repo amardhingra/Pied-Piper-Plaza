@@ -49,7 +49,7 @@ public class OnePiperStrategy implements pppp.g3.Strategy {
 
         // create gate positions
         gateEntrance = Movement.makePoint(door, side * 0.5 - 5, neg_y, swap);
-        insideGate = Movement.makePoint(door, side * 0.5 + 7.5, neg_y, swap);
+        insideGate = Movement.makePoint(door, side * 0.5 + 2.5, neg_y, swap);
         justOutsideGate = Movement.makePoint(door, side * 0.5 - 10, neg_y, swap);
 
         // create the state machines for the pipers
@@ -162,8 +162,8 @@ public class OnePiperStrategy implements pppp.g3.Strategy {
         double bestReward = 0;
 
         //Go through candidate points and find point with 
-        for (int i = - side/2; i < side/2; i = i+side/10) {
-            for (int j = -side/2; j < side/2; j = j+side/10) {
+        for (int i = - side/2; i <= side/2; i = i+side/20) {
+            for (int j = -side/2; j <= side/2; j = j+side/20) {
                 Point p = Movement.makePoint(i, j, neg_y, swap);
 
                 double distanceFromPiperToPoint = PIPER_WALK_SPEED * Movement.distance(p, thisPiper);
@@ -195,6 +195,25 @@ public class OnePiperStrategy implements pppp.g3.Strategy {
         }
         return result;
     }
+
+    /*
+     * Here's some documentation to explain a function even though it explains itself
+     */
+    private int numberOfPipersWithinXMetersOfPoint(Point p, Point[][] pipers, double dist) {
+        int result = 0;
+        for(int i = 0; i < pipers.length; i++){
+            if(i == id)
+                continue;
+            for(int j = 0; j < pipers[i].length; j++){
+                if(Movement.distance(p, pipers[i][j]) < dist){
+                    ++result;
+                }
+            }
+        }
+        return result;
+    }
+
+
 
     // finds closest rat in direction away from the gate
     public Point findClosest(Point start, Point[] ends) {

@@ -43,7 +43,7 @@ public class MidPiperStrategy implements pppp.g3.Strategy {
 
         // create gate positions
         gateEntrance = Movement.makePoint(door, side * 0.5, neg_y, swap);
-        insideGate = Movement.makePoint(door, side * 0.5 + 5, neg_y, swap);
+        insideGate = Movement.makePoint(door, side * 0.5 + 2.5, neg_y, swap);
         outsideGate = Movement.makePoint(door, side * 0.5 - 5, neg_y, swap);
 
         // create the state machines for the pipers
