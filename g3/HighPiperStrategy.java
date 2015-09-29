@@ -53,7 +53,7 @@ public class HighPiperStrategy implements pppp.g3.Strategy {
 		for (int p = 0 ; p != numberOfPipers; ++p) {
 			piperStateMachine[p] = generateStateMachine(p);
             piperState[p] = 0;
-            if(rats.length / (side * side) < pppp.g3.StrategyFactory.RAT_DENSITY_THRESHOLD) {
+            if(rats.length / (double) (side * side) < StrategyFactory.RAT_DENSITY_THRESHOLD) {
                 piperState[p] = 7;
             }
         }
