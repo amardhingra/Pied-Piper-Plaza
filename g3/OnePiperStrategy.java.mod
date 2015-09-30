@@ -72,7 +72,7 @@ public class OnePiperStrategy implements pppp.g3.Strategy {
         try {
             int state = piperState[p];
             //Stay inside gate till all rats are captured
-            if (state == 4 && !noRatsAreWithinRange(pipers[id][p], rats, PIPER_RADIUS/2)) {
+            if (state == 4 && !noRatsAreWithinRange(pipers[id][p], rats, PIPER_RADIUS)) {
                 dst = piperStateMachine[p][piperState[p]];
                 src = pipers[id][p];
                 moves[p] = Movement.makeMove(src, dst, play(state));
@@ -105,10 +105,6 @@ public class OnePiperStrategy implements pppp.g3.Strategy {
                 dst = piperStateMachine[p][piperState[p]];
             }
             state = piperState[p];
-
-            if(state == 0){
-                piperStateMachine[0] = createHunterStateMachine();
-            }
 
             //Try tracking down rats on the way home
             state = piperState[p];
@@ -180,8 +176,8 @@ public class OnePiperStrategy implements pppp.g3.Strategy {
         double bestReward = 0;
 
         //Go through candidate points and find point with 
-        for (int i = - side/2; i <= side/2; i = i+side/25) {
-            for (int j = -side/2; j <= side/2; j = j+side/25) {
+        for (int i = - side/2; i <= side/2; i = i+side/20) {
+            for (int j = -side/2; j <= side/2; j = j+side/20) {
                 Point p = Movement.makePoint(i, j, neg_y, swap);
 
                 double distanceFromPiperToPoint = PIPER_WALK_SPEED * Movement.distance(p, thisPiper);

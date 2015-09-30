@@ -29,8 +29,6 @@ public class StrategyFactory{
 			case 3:
 			case 4:
 			case 5: 
-				currentStrategy = new MidPiperStrategy();
-				break;
 			case 6: 
 				currentStrategy = new MidPiperStrategy();
 				break;
