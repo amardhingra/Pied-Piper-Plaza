@@ -111,6 +111,7 @@ public class OnePiperStrategy implements pppp.g3.Strategy {
             if (state == 3) {
                 if (noRatsAreWithinRange(pipers[id][p], rats, PIPER_RADIUS)) {
                     piperState[p] = 2;
+                    dst = densestPoint(pipers, pipers_played, rats);
                 }
                 else {
                     Point lineStart = pipers[id][p];
@@ -235,8 +236,8 @@ public class OnePiperStrategy implements pppp.g3.Strategy {
 
     private Point findRatOnPathToGate(Point piper, Point lineStart, Point lineEnd, Point[] rats, double maxDist) {
         for (Point rat : rats) {
-            if (Movement.distance(gateEntrance, rat) < side/4 
-                && Movement.distance(piper, rat) > 4 && distanceFromPointToLine(rat, lineStart, lineEnd) <= maxDist) {
+            if (Movement.distance(gateEntrance, rat) < side/5 
+                && Movement.distance(piper, rat) > PIPER_RADIUS-1 && distanceFromPointToLine(rat, lineStart, lineEnd) <= maxDist) {
                 System.out.println(rat);
                 return rat;
             }
