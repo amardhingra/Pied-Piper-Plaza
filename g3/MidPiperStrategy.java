@@ -14,6 +14,7 @@ public class MidPiperStrategy implements pppp.g3.Strategy {
     public static final int PIPER_RADIUS = 10;
     public static final float PIPER_RUN_SPEED = 2.5f;
     public static final int PIPER_WALK_SPEED = 1;
+    public static final int POINT_DENSITY = 10;
 
     private int id = -1;
     private int side = 0;
@@ -24,6 +25,8 @@ public class MidPiperStrategy implements pppp.g3.Strategy {
     private double door = 0.0;
     private boolean neg_y;
     private boolean swap;
+
+    private int[][] ratNumbers;
 
     private Point gateEntrance = null;
     private Point insideGate = null;
@@ -36,6 +39,8 @@ public class MidPiperStrategy implements pppp.g3.Strategy {
         this.id = id;
         this.side = side;
         this.turns = turns;
+
+        ratNumbers = new int[POINT_DENSITY + 1][POINT_DENSITY + 1];
 
         // variables to rotate map
         neg_y = id == 2 || id == 3;
@@ -53,8 +58,10 @@ public class MidPiperStrategy implements pppp.g3.Strategy {
 
         for (int p = 0 ; p != numberOfPipers; ++p) {
             piperStateMachine[p] = generateStateMachine(p, rats);
-
             piperState[p] = 0;
+            if(rats.length / (double) (side * side) < StrategyFactory.RAT_DENSITY_THRESHOLD) {
+                piperState[p] = 7;
+            }
         }
     }
 
@@ -67,13 +74,13 @@ public class MidPiperStrategy implements pppp.g3.Strategy {
 
         int state;
 
+        fillRatDensities(rats);
+
         for(int p = 0; p < numberOfPipers; p++){
             state = piperState[p];
             boolean play = false;
             src = pipers[id][p];
             dst = piperStateMachine[p][state];
-
-            //System.err.println(p + ":" + state);
 
             if(state == 0){
                 if(isWithinDistance(src, dst, 0.00001)){
@@ -165,13 +172,14 @@ public class MidPiperStrategy implements pppp.g3.Strategy {
                     piperStateMachine[p][8] = dst;
                 }
                 play = true;
+
             } else if (state == 10) {
                 if(isWithinDistance(src, dst, 0.00001) && noRatsAreWithinRange(pipers[id][p], rats, 10)){
                     piperState[p] = state = 7;
                     dst = piperStateMachine[p][state];
                 }
-
                 play = true;
+
             } else {
                 System.out.println("Piper " + p + " is in state " + state);
             }
@@ -185,6 +193,22 @@ public class MidPiperStrategy implements pppp.g3.Strategy {
             }
 
             moves[p] = Movement.makeMove(src, dst, play);
+        }
+    }
+
+    private void fillRatDensities(Point[] rats){
+
+        //Go through candidate points and find point with
+        for (int i = 0; i <= POINT_DENSITY; i++) {
+            for (int j = 0; j <= POINT_DENSITY; j++) {
+
+                Point point = Movement.makePoint(-side/2 + i*side/POINT_DENSITY, -side/2 + j*side/POINT_DENSITY, neg_y, swap);
+
+                int numberOfRatsNearPoint = (int) Math.pow(numberOfRatsWithinXMetersOfPoint(point,
+                        PIPER_RADIUS, rats, 0), 2);
+
+                ratNumbers[i][j] = numberOfRatsNearPoint;
+            }
         }
     }
 
@@ -226,8 +250,8 @@ public class MidPiperStrategy implements pppp.g3.Strategy {
         Point densest = Movement.makePoint(0, 0, neg_y, swap);
         double bestReward = 0;
         //Go through candidate points and find point with
-        for (int i = minX; i < maxX; i++) {
-            for (int j = minY; j < maxY; j++) {
+        for (int i = minX; i < maxX; i+=side/100) {
+            for (int j = minY; j < maxY; j+=side/20) {
                 Point point = Movement.makePoint(i, j, false, false);
                 int numberOfRatsNearPoint = numberOfRatsWithinXMetersOfPoint(point,
                         PIPER_RADIUS, rats, p);

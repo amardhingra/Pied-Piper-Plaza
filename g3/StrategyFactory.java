@@ -12,7 +12,7 @@ public class StrategyFactory{
 	final public static double piperPivot = 1;
 	final public static double ratPivot = 1;
 
-	public final static double RAT_DENSITY_THRESHOLD= 0.0025;
+	public final static double RAT_DENSITY_THRESHOLD = 25.0/100.0/100.0;
 
 	private Strategy currentStrategy = null;
 
@@ -32,6 +32,8 @@ public class StrategyFactory{
 				currentStrategy = new MidPiperStrategy();
 				break;
 			case 6: 
+				currentStrategy = new MidPiperStrategy();
+				break;
 			case 7:
 			case 8:
 			case 9:
