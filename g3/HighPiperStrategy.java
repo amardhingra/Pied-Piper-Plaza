@@ -146,11 +146,7 @@ public class HighPiperStrategy implements pppp.g3.Strategy {
                 dst = gateEntrance;
                 if (isWithinDistance(src, dst, 0.00001)) {
                     piperState[p] = state = 8;
-                    if(p < 2 * numberOfPipers/3){
-                        dst = densestPoint(pipers, pipers_played, rats, p);
-                    } else {
-                        dst = findNearestRat(pipers, rats, p);
-                    }
+                    dst = densestPoint(pipers, pipers_played, rats, p);
                     piperStateMachine[p][8] = dst;
                 }
 
@@ -162,11 +158,7 @@ public class HighPiperStrategy implements pppp.g3.Strategy {
                     dst = piperStateMachine[p][state];
                     play = true;
                 } else {
-                    if(p < 2 * numberOfPipers/3){
-                        dst = densestPoint(pipers, pipers_played, rats, p);
-                    } else {
-                        dst = findNearestRat(pipers, rats, p);
-                    }
+                    dst = densestPoint(pipers, pipers_played, rats, p);
                     piperStateMachine[p][8] = dst;
                 }
             }
@@ -178,28 +170,18 @@ public class HighPiperStrategy implements pppp.g3.Strategy {
                 }
                 else if(noRatsAreWithinRange(pipers[id][p], rats, 5)){
                     piperState[p] = state = 8;
-                    if(p < 2 * numberOfPipers/3){
-                        dst = densestPoint(pipers, pipers_played, rats, p);
-                    } else {
-                        dst = findNearestRat(pipers, rats, p);
-                    }
+                    dst = densestPoint(pipers, pipers_played, rats, p);
                     piperStateMachine[p][8] = dst;
                 }
                 play = true;
             } else if (state == 10) {
-                if(isWithinDistance(src, dst, 0.00001) && noRatsAreWithinRange(pipers[id][p], rats, 10)){
+                if(isWithinDistance(src, dst, 0.00001) && noRatsAreWithinRange(pipers[id][p], rats, 4)){
                     piperState[p] = state = 7;
                     dst = piperStateMachine[p][state];
                 }
                 play = true;
             } else {
                 System.out.println("Piper " + p + " is in state " + state);
-            }
-
-            if(isWithinDistance(src, dst, 0.00001) && state == 0){
-                piperState[p] = ++piperState[p] % piperStateMachine[p].length;
-                state = piperState[p];
-                dst = piperStateMachine[p][state];
             }
 
             moves[p] = Movement.makeMove(src, dst, play);
@@ -339,6 +321,11 @@ public class HighPiperStrategy implements pppp.g3.Strategy {
         }
 
 
+        if(minDist > side/5){
+             closestRat = rats[p % rats.length];
+        }
+
+
         Point closestPiper = findClosestPiper(pipers, closestRat, p);
 
         if(closestPiper != null){
@@ -355,9 +342,13 @@ public class HighPiperStrategy implements pppp.g3.Strategy {
 
         states[0] = gateEntrance;
 
-        p %= 10;
+        if(p%10 != p && p % 2 == 0){
+            p = 0;
+        } else if (p%10 != p && p % 2 != 0){
+            p = 9;
+        }
 
-        double spreadAngle = Math.min(90, numberOfPipers * 10);
+        double spreadAngle = Math.max(90, numberOfPipers * 10);
 
         double theta = Math.toRadians(p * spreadAngle/(Math.min(numberOfPipers, 10) - 1) + 90 - spreadAngle/2);
 
