@@ -13,23 +13,25 @@ public class OnePiperStrategy implements pppp.g3.Strategy {
     public static final int PIPER_RADIUS = 10;
     public static final int PIPER_RUN_SPEED = 5; 
     public static final int PIPER_WALK_SPEED = 1;
+    public static final double MAX_RAT_DIST_FROM_LINE = 2;
+    public static final double DOOR = 0.0;
+
+            // create gate positions
+    public static Point gateEntrance;
+    public static Point insideGate;
+    public static Point justOutsideGate;
 
     //Because in this class p is always 0.
-    private static int p = 0;
+    public static int p = 0;
 
+    private static int side = 0;
     private int id = -1;
-    private int side = 0;
     private long turns = 0;
     private int numberOfPipers = 0;
     private int[] piperState = null;
     private Point[][] piperStateMachine = null;
-    private double door = 0.0;
     private boolean neg_y;
     private boolean swap;
-
-    private Point gateEntrance = null;
-    private Point insideGate = null;
-    private Point justOutsideGate = null;
 
     private int numberOfHunters = 0;
     private int sparseCutoff = 10;
@@ -38,6 +40,10 @@ public class OnePiperStrategy implements pppp.g3.Strategy {
 
     public void init(int id, int side, long turns,
                      Point[][] pipers, Point[] rats){
+        gateEntrance = Movement.makePoint(DOOR, side * 0.5 - 5, neg_y, swap);
+        insideGate = Movement.makePoint(DOOR, side * 0.5 + 2.5, neg_y, swap);
+        justOutsideGate = Movement.makePoint(DOOR, side * 0.5 - 10, neg_y, swap);
+
         // storing variables
         this.id = id;
         this.side = side;
@@ -46,11 +52,6 @@ public class OnePiperStrategy implements pppp.g3.Strategy {
         // variables to rotate map
         neg_y = id == 2 || id == 3;
         swap  = id == 1 || id == 3;
-
-        // create gate positions
-        gateEntrance = Movement.makePoint(door, side * 0.5 - 5, neg_y, swap);
-        insideGate = Movement.makePoint(door, side * 0.5 + 2.5, neg_y, swap);
-        justOutsideGate = Movement.makePoint(door, side * 0.5 - 10, neg_y, swap);
 
         // create the state machines for the pipers
         numberOfPipers = pipers[id].length;
@@ -66,9 +67,11 @@ public class OnePiperStrategy implements pppp.g3.Strategy {
     public void play(Point[][] pipers, boolean[][] pipers_played,
                      Point[] rats, Move[] moves) {
         Point dst, src;
+        boolean catchingPotentialRat = false;
 
         try {
             int state = piperState[p];
+            //Stay inside gate till all rats are captured
             if (state == 4 && !noRatsAreWithinRange(pipers[id][p], rats, PIPER_RADIUS)) {
                 dst = piperStateMachine[p][piperState[p]];
                 src = pipers[id][p];
@@ -76,21 +79,11 @@ public class OnePiperStrategy implements pppp.g3.Strategy {
                 return;
             }
 
-            int currentNumberOfRats = rats.length; 
-            // double y_depth = 10 + side * (1 - (((double) currentNumberOfRats / initNumberOfRats)));
-            // double justOutsideGate_y = side * 0.5 - y_depth;
-
-            // piperStateMachine[p][1] = Movement.makePoint(door, justOutsideGate_y, neg_y, swap);
-
-            state = piperState[p];
-            //Chase down any lost rats
+            //Chase down any lost rats if you're heading for gate entrance or inside gate
             if (state == 4 && noRatsAreWithinRange(pipers[id][p], rats, 10)) {
                 piperState[p] = 0;
             }
-            else if (state == 3 && noRatsAreWithinRange(pipers[id][p], rats, 10)) {
-                piperState[p] = 2;
-            }
-            else if (state == 2) {
+            if (state == 2) {
                 piperStateMachine[p][piperState[p]] = densestPoint(pipers, pipers_played, rats);
             }
 
@@ -102,13 +95,33 @@ public class OnePiperStrategy implements pppp.g3.Strategy {
                 piperState[p] = piperState[p] % piperStateMachine[p].length;
                 dst = piperStateMachine[p][piperState[p]];
             }
-
+            if (catchingPotentialRat && state == 3 && isWithinDistance(src, dst, 10)) {
+                catchingPotentialRat = false;
+                piperStateMachine[p][piperState[p]] = gateEntrance;
+            }
             else if (isWithinDistance(src, dst, 0.05)) {
                 ++piperState[p];
                 piperState[p] = piperState[p] % piperStateMachine[p].length;
                 dst = piperStateMachine[p][piperState[p]];
             }
             state = piperState[p];
+
+            //Try tracking down rats on the way home
+            state = piperState[p];
+            if (state == 3) {
+                if (noRatsAreWithinRange(pipers[id][p], rats, PIPER_RADIUS)) {
+                    piperState[p] = 2;
+                }
+                else {
+                    Point lineStart = pipers[id][p];
+                    Point lineEnd = gateEntrance;
+                    Point potentialCatch = findRatOnPathToGate(lineStart, lineStart, lineEnd, rats, MAX_RAT_DIST_FROM_LINE);
+                    if (!potentialCatch.equals(gateEntrance)) {
+                        piperStateMachine[p][piperState[p]] = potentialCatch;
+                        catchingPotentialRat = true;
+                    }
+                }
+            }
             moves[p] = Movement.makeMove(src, dst, play(state));
         }
         catch (Exception e) {
@@ -213,7 +226,23 @@ public class OnePiperStrategy implements pppp.g3.Strategy {
         return result;
     }
 
+    /*
+    * Methods for finding rats along the path back to gate
+    */
+    private double distanceFromPointToLine(Point p, Point lineStart, Point lineEnd) {
+        return Math.abs((lineEnd.y-lineStart.y)*p.x - (lineEnd.x-lineStart.x)*p.y + lineEnd.x*lineStart.y - lineEnd.y*lineStart.x) / Math.sqrt(Math.pow(lineEnd.y-lineStart.y, 2) + Math.pow(lineEnd.x-lineStart.x, 2));
+    }
 
+    private Point findRatOnPathToGate(Point piper, Point lineStart, Point lineEnd, Point[] rats, double maxDist) {
+        for (Point rat : rats) {
+            if (Movement.distance(gateEntrance, rat) < side/4 
+                && Movement.distance(piper, rat) > 4 && distanceFromPointToLine(rat, lineStart, lineEnd) <= maxDist) {
+                System.out.println(rat);
+                return rat;
+            }
+        }
+        return gateEntrance;
+    }
 
     // finds closest rat in direction away from the gate
     public Point findClosest(Point start, Point[] ends) {
@@ -242,11 +271,11 @@ public class OnePiperStrategy implements pppp.g3.Strategy {
         pos[0] = gateEntrance;
         // go just outside gate
         pos[1] = justOutsideGate;
-        //Now find closest rat
+        //Will be replaced by eventual location
         pos[2] = justOutsideGate;
-        // move inside gate
+        // move to gate entrance
         pos[3] = gateEntrance;
-
+        // Finally go inside the gate
         pos[4] = insideGate;
 
         return pos;

@@ -15,4 +15,8 @@ public class Point {
 	{
 		return Math.hypot(x - p.x, y - p.y);
 	}
+
+	public String toString() {
+		return this.x + ": " + this.y;
+	}
 }
