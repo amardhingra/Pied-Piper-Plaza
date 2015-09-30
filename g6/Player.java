@@ -425,7 +425,7 @@ public class Player implements pppp.sim.Player {
 			}
 		}
 		if(ratIndex == -1){
-			System.out.print("null");
+//			System.out.print("null");
 			
 			return null;
 		}

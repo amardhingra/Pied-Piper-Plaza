@@ -11,7 +11,8 @@ public class Point {
 		this.y = y;
 	}
 
-	public String toString() {
-		return "X: " + x + ", " + "Y: " + y;
+	public double distance(Point p)
+	{
+		return Math.hypot(x - p.x, y - p.y);
 	}
 }

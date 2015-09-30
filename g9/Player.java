@@ -175,7 +175,7 @@ public class Player implements pppp.sim.Player {
             }
         }
         else {
-        	System.out.println("sparse");
+//        	System.out.println("sparse");
             sparseStrategy(pipers, pipers_played, rats, moves);
         }
     }

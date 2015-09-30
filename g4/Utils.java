@@ -3,7 +3,7 @@ package pppp.g4;
 import java.util.Random;
 
 import pppp.sim.Point;
-import pppp.sim.WinnerInfo;
+//import pppp.sim.WinnerInfo;
 
 public class Utils {
 
@@ -49,7 +49,7 @@ public class Utils {
 	 *  Needed for writing the score sheet
 	 * 
 	 */
-	public static WinnerInfo getMaxValueAndIndex(int[] scoresOf9) {
+/*	public static WinnerInfo getMaxValueAndIndex(int[] scoresOf9) {
 		int maxValue = Integer.MIN_VALUE;
 		int maxIndex = -1;
 		for(int i = 0; i < scoresOf9.length; i++) {
@@ -60,5 +60,5 @@ public class Utils {
 		}
 		return new WinnerInfo(maxIndex,maxValue);
 	}
- 
+*/
 }
