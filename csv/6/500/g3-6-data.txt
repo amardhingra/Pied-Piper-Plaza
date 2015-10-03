@@ -1,0 +1,5 @@
+First: 349
+Second: 198
+Third: 134
+Fourth: 142
+Average: 2.91616038882Average rat percent: 0.290630053774
