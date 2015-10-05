@@ -1,5 +1,7 @@
-First: 1215
+First: 1216
 Second: 804
 Third: 562
 Fourth: 360
-Average: 2.97721863312Average rat percent: 0.299687548735
+Total: 8760
+Average: 2.97756628144
+Average rat percent: 0.302581929177
